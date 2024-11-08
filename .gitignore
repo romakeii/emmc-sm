@@ -1,0 +1,12 @@
+*
+!.gitignore
+!constraints/
+!constraints/.gitkeep
+!ip/
+!ip/.gitkeep
+!sim/
+!sim/.gitkeep
+!src/
+!src/.gitkeep
+!vivado/
+!vivado/.gitkeep
