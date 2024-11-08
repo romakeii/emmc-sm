@@ -1,5 +1,6 @@
 *
 !.gitignore
+!README.md
 !constraints/
 !constraints/.gitkeep
 !ip/
@@ -8,5 +9,7 @@
 !sim/.gitkeep
 !src/
 !src/.gitkeep
+!src/sd_mmc_emulator/
+!src/sd_mmc_emulator/*.vhd
 !vivado/
 !vivado/.gitkeep
