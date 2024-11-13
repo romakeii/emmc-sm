@@ -8,8 +8,11 @@
 !sim/
 !sim/.gitkeep
 !src/
-!src/.gitkeep
+!src/*.sv
 !src/sd_mmc_emulator/
 !src/sd_mmc_emulator/*.vhd
 !vivado/
-!vivado/.gitkeep
+!vivado/*.sh
+!vivado/*.tcl
+!auxiliary/
+!auxiliary/*.tcl
