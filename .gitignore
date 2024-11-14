@@ -9,6 +9,8 @@
 !sim/.gitkeep
 !src/
 !src/*.sv
+!src/inc/
+!src/inc/*.*vh
 !src/sd_mmc_emulator/
 !src/sd_mmc_emulator/*.vhd
 !vivado/

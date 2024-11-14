@@ -31,6 +31,15 @@ if {[llength $src_files] != 0} {add_files -norecurse -fileset [get_filesets sour
 
 if {[llength $vhd_files] != 0} {set_property -name "file_type" -value "VHDL 2008" -objects [get_files -of_objects [get_filesets sources_1] *.vhd]}
 if {[llength $vh_files] != 0} {set_property -name "file_type" -value "Verilog Header" -objects [get_files -of_objects [get_filesets sources_1] *.*vh]}
-if {[llength $v_files] != 0} {set_property -name "file_type" -value "SystemVerilog"  -objects [get_files -of_objects [get_filesets sources_1] *.sv]}
+if {[llength $v_files] != 0} {set_property -name "file_type" -value "SystemVerilog" -objects [get_files -of_objects [get_filesets sources_1] *.sv]}
+
+set_property -name "top" -value "testcore" -objects [get_filesets sources_1]
+
+create_ip -vlnv {xilinx.com:ip:vio:3.0} -module vio -dir $root_dir/ip/
+set_property -dict [list \
+	CONFIG.C_EN_PROBE_IN_ACTIVITY {0} \
+	CONFIG.C_NUM_PROBE_IN {0} \
+	] [get_ips vio]
+generate_target {instantiation_template} [get_files $root_dir/ip/vio/vio.xci]
 
 exit
