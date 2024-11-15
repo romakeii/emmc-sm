@@ -256,6 +256,11 @@ package jedec_p;
 	//
 
 	typedef struct packed {
+		logic [5 : 0] idx;
+		logic [31 : 0] arg;
+	} cmd_info_t;
+
+	typedef struct packed {
 		logic [31 : 26] set_to_0_a;
 		logic [25 : 24] access;
 		logic [23 : 16] index;

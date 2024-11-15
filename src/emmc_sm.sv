@@ -1,4 +1,4 @@
-`include "jedec.svh"
+`include "emmc_sm.svh"
 
 `define __SETUP_WAIT__(WAIT_FOR_WHAT, IDX, ARG) \
 	do begin \
@@ -10,12 +10,10 @@
 	end while (0)
 
 `define __SETUP_WAIT_FOR_CMD__(IDX, ARG) \
-	`__SETUP_WAIT__(WAIT_CMD, IDX, ARG);
+	`__SETUP_WAIT__(emmc_sm_p::WAIT_CMD, IDX, ARG);
 
 `define __SETUP_WAIT_FOR_DAT__(IDX, ARG) \
-	`__SETUP_WAIT__(WAIT_DAT, IDX, ARG);
-
-
+	`__SETUP_WAIT__(emmc_sm_p::WAIT_DAT, IDX, ARG);
 
 module emmc_sm #(
 	parameter logic ___SIMULATION___ = 0
@@ -44,6 +42,11 @@ module emmc_sm #(
 	output logic ready_o
 
 );
+
+	jedec_p::cid_t cid;
+	jedec_p::csd_t csd;
+	jedec_p::ext_csd_t ext_csd;
+
 
 	localparam logic [31 : 0] CARD_ADDR_ARG = 32'h40000;
 
@@ -151,31 +154,10 @@ module emmc_sm #(
 		mp_cntr_enbl = cond;
 	endfunction
 
-	typedef enum {
-		START,
-		WAIT_CMD,
-		WAIT_DAT,
-		WAIT_BUSY,
-		INIT_IDLE,
-		INIT_READY,
-		INIT_IDENT,
-		INIT_STBY,
-		INIT_GET_CSD,
-		INIT_TRAN,
-		INIT_GET_CSD_EXT,
-		INIT_GO_FAST,
-		INIT_SET_DWIDTH,
-		DO_IDLE,
-		DO_WRITE,
-		DO_READ,
-		DO_NOTHING,
-		IDLE,
-		ERR
-	} state_t;
-	state_t rtrn_state_pend;
-	state_t rtrn_state;
-	state_t curr_state;
-	state_t next_state;
+	emmc_sm_p::state_t orig_state_pend;
+	emmc_sm_p::state_t orig_state;
+	emmc_sm_p::state_t curr_state;
+	emmc_sm_p::state_t next_state;
 	logic state_change_enbl;
 	logic state_changed;
 	always_ff @(posedge clk_i) state_changed <= state_change_enbl;
@@ -202,9 +184,9 @@ module emmc_sm #(
 	end
 
 	always_comb begin
-		next_state = START;
+		next_state = emmc_sm_p::START;
 		state_change_enbl = '0;
-		rtrn_state_pend = curr_state;
+		orig_state_pend = curr_state;
 		mp_cntr_rst = 1;
 		cmdh_cmd_info = '0;
 		cmdh_start = '0;
@@ -216,150 +198,163 @@ module emmc_sm #(
 		bus_size_pend = '0;
 		enbl_bus_size_change = '0;
 		case (curr_state)
-			WAIT_CMD: begin
+			emmc_sm_p::WAIT_CMD: begin
 				// State change enabled then CMD was received propertly
 				state_change_enbl = cmdh_int_status.cc;
-				case (rtrn_state)
-					INIT_IDLE: begin
-						next_state = INIT_READY;
+				case (orig_state)
+					emmc_sm_p::INIT_IDLE: begin
+						next_state = emmc_sm_p::INIT_READY;
 					end
-					INIT_READY: begin
-						next_state = cmdh_response_0[31] ? INIT_IDENT : rtrn_state; // 32'hC0FF8080
+					emmc_sm_p::INIT_READY: begin
+						next_state = cmdh_response_0[31] ? emmc_sm_p::INIT_IDENT : orig_state; // 32'hC0FF8080
 					end
-					INIT_IDENT: begin
+					emmc_sm_p::INIT_IDENT: begin
 						jedec_p::cid_t cid;
 						cid = {cmdh_response_0, cmdh_response_1, cmdh_response_2, cmdh_response_3};
 						if(___SIMULATION___) begin
-							next_state = INIT_STBY;
+							next_state = emmc_sm_p::INIT_STBY;
 						end else begin
-							if(cid.mid == 8'h70) next_state = INIT_STBY;
-							else                 next_state = INIT_IDENT;
+							if(cid.mid == 8'h70) next_state = emmc_sm_p::INIT_STBY;
+							else                 next_state = emmc_sm_p::INIT_IDENT;
 						end
 					end
-					INIT_STBY: begin
-						next_state = INIT_GET_CSD;
+					emmc_sm_p::INIT_STBY: begin
+						next_state = emmc_sm_p::INIT_GET_CSD;
 					end
-					INIT_GET_CSD: begin
-						next_state = INIT_TRAN;
+					emmc_sm_p::INIT_GET_CSD: begin
+						next_state = emmc_sm_p::INIT_TRAN;
 					end
-					INIT_TRAN: begin
-						next_state = INIT_GET_CSD_EXT;
+					emmc_sm_p::INIT_TRAN: begin
+						next_state = emmc_sm_p::INIT_GET_CSD_EXT;
 					end
 					// wait for cmd to wait for busy
-					INIT_GO_FAST,
-					INIT_SET_DWIDTH: begin
-						next_state = WAIT_BUSY;
-						rtrn_state_pend = rtrn_state;
+					emmc_sm_p::INIT_GO_FAST,
+					emmc_sm_p::INIT_SET_DWIDTH: begin
+						next_state = emmc_sm_p::WAIT_BUSY;
+						orig_state_pend = orig_state;
 					end
 					// wait for cmd to wait for dat
-					INIT_GET_CSD_EXT,
-					DO_WRITE,
-					DO_READ: begin
-						next_state = WAIT_DAT;
-						rtrn_state_pend = rtrn_state;
+					emmc_sm_p::INIT_GET_CSD_EXT,
+					emmc_sm_p::DO_WRITE,
+					emmc_sm_p::DO_READ: begin
+						next_state = emmc_sm_p::WAIT_DAT;
+						orig_state_pend = orig_state;
 					end
 					default: begin
-						next_state = ERR;
+						next_state = emmc_sm_p::ERR;
 					end
 				endcase
 			end
-			WAIT_DAT: begin
+			emmc_sm_p::WAIT_DAT: begin
 				state_change_enbl = fsm_dat_not_busy & dath_crc_ok;
-				case(rtrn_state)
-					INIT_GET_CSD_EXT: begin
-						next_state = INIT_GO_FAST;
+				case(orig_state)
+					emmc_sm_p::INIT_GET_CSD_EXT: begin
+						next_state = emmc_sm_p::INIT_GO_FAST;
 						dath_read = state_changed;
 					end
-					DO_WRITE: begin
-						next_state = DO_IDLE;
+					emmc_sm_p::DO_WRITE: begin
+						next_state = emmc_sm_p::DO_IDLE;
 						dath_write = state_changed;
 					end
-					DO_READ: begin
-						next_state = DO_IDLE;
+					emmc_sm_p::DO_READ: begin
+						next_state = emmc_sm_p::DO_IDLE;
 						dath_read = state_changed;
 					end
 					default: begin
-						next_state = ERR;
+						next_state = emmc_sm_p::ERR;
 					end
 				endcase
 			end
-			WAIT_BUSY: begin
+			emmc_sm_p::WAIT_BUSY: begin
 				state_change_enbl = card_not_busy_pulse;
-				case (rtrn_state)
-					INIT_GO_FAST: begin
-						next_state = INIT_SET_DWIDTH;
+				case (orig_state)
+					emmc_sm_p::INIT_GO_FAST: begin
+						next_state = emmc_sm_p::INIT_SET_DWIDTH;
 						sel_clk_o_pend = 1;
 						enbl_clk_change = state_change_enbl;
 					end
-					INIT_SET_DWIDTH: begin
-						next_state = DO_IDLE;
+					emmc_sm_p::INIT_SET_DWIDTH: begin
+						next_state = emmc_sm_p::DO_IDLE;
 						bus_size_pend = 2'b10;
 						enbl_bus_size_change = 1;
 					end
 					default: begin
-						next_state = ERR;
+						next_state = emmc_sm_p::ERR;
 					end
 				endcase
 			end
-			START: begin
-				next_state = INIT_IDLE;
+			emmc_sm_p::START: begin
+				next_state = emmc_sm_p::INIT_IDLE;
 				state_change_enbl = mp_cntr > 450;
 				mp_cntr_use(1);
 			end
-			INIT_IDLE: begin
+			emmc_sm_p::INIT_IDLE: begin
 				`__SETUP_WAIT_FOR_CMD__(0, 0);
 			end
-			INIT_READY: begin
+			emmc_sm_p::INIT_READY: begin
 				`__SETUP_WAIT_FOR_CMD__(1, 32'h40FF8080);
 			end
-			INIT_IDENT: begin
+			emmc_sm_p::INIT_IDENT: begin
 				`__SETUP_WAIT_FOR_CMD__(2, 0);
 			end
-			INIT_STBY: begin
+			emmc_sm_p::INIT_STBY: begin
 				`__SETUP_WAIT_FOR_CMD__(3, CARD_ADDR_ARG);
 			end
-			INIT_GET_CSD: begin
+			emmc_sm_p::INIT_GET_CSD: begin
 				`__SETUP_WAIT_FOR_CMD__(9, CARD_ADDR_ARG);
 			end
-			INIT_TRAN: begin
+			emmc_sm_p::INIT_TRAN: begin
 				`__SETUP_WAIT_FOR_CMD__(7, CARD_ADDR_ARG);
 			end
-			INIT_GET_CSD_EXT: begin
+			emmc_sm_p::INIT_GET_CSD_EXT: begin
 				`__SETUP_WAIT_FOR_CMD__(8, 0);
 			end
-			INIT_GO_FAST: begin
+			emmc_sm_p::INIT_GO_FAST: begin
 				`__SETUP_WAIT_FOR_CMD__(6, 32'h03b90100);
 			end
-			INIT_SET_DWIDTH: begin
+			emmc_sm_p::INIT_SET_DWIDTH: begin
 				`__SETUP_WAIT_FOR_CMD__(6, 32'h03B70200);
 			end
-			DO_IDLE: begin
-				next_state = we_i ? DO_WRITE : DO_READ;
+			emmc_sm_p::DO_IDLE: begin
+				next_state = we_i ? emmc_sm_p::DO_WRITE : emmc_sm_p::DO_READ;
 				state_change_enbl = start_i;
 			end
-			DO_WRITE: begin
+			emmc_sm_p::DO_WRITE: begin
 				`__SETUP_WAIT_FOR_CMD__(24, 0); // cmd wait for this state is chained with dat wait
 			end
-			DO_READ: begin
+			emmc_sm_p::DO_READ: begin
 				`__SETUP_WAIT_FOR_CMD__(17, 0); // cmd wait for this state is chained with dat wait
 			end
-			DO_NOTHING: begin
-				next_state = DO_NOTHING;
+			emmc_sm_p::DO_NOTHING: begin
+				next_state = emmc_sm_p::DO_NOTHING;
 				state_change_enbl = 0;
 			end
 		endcase
 	end
 
 	always_ff @(posedge clk_i or posedge arst_i) begin
-		if(arst_i)                 {rtrn_state, curr_state} <= {START, START};
-		else if(state_change_enbl) {rtrn_state, curr_state} <= {rtrn_state_pend, next_state};
+		if(arst_i)                 {orig_state, curr_state} <= {emmc_sm_p::START, emmc_sm_p::START};
+		else if(state_change_enbl) {orig_state, curr_state} <= {orig_state_pend, next_state};
 	end
 
 	assign emmc_clk_o_pad = sd_clk;
 
-	// ----------
-
 	assign dvalid_o = dath_tx_dat_rd | dath_rx_dat_we;
-	assign ready_o = curr_state == DO_IDLE;
+	assign ready_o = curr_state == emmc_sm_p::DO_IDLE;
+
+	logic [$bits(ext_csd) - 1 : 0] ext_csd_buf;
+	always_ff @(posedge clk_i or posedge arst_i) begin
+		if(arst_i) begin
+			{cid, csd, ext_csd} <= '0;
+		end else begin
+			if(state_change_enbl == 1) begin
+				if(orig_state == emmc_sm_p::INIT_IDENT)   cid <= cmdh_response_0;
+				if(orig_state == emmc_sm_p::INIT_GET_CSD) csd <= cmdh_response_0;
+			end
+			if(orig_state == emmc_sm_p::INIT_GET_CSD_EXT) begin
+				if(dvalid_o) ext_csd_buf <= {dat_o, ext_csd_buf[$bits(ext_csd) - $bits(dat_o) - 1 : 0]};
+			end
+		end
+	end
 
 endmodule
