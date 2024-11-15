@@ -6,8 +6,8 @@ source "$root_dir/auxiliary/find_files.tcl"
 
 set proj_name "testcore"
 
-set v_files   [list {*}[find_files $root_dir/src *.v] {*}[find_files $root_dir *.sv]]
-set vh_files  [list {*}[find_files $root_dir/src *.vh] {*}[find_files $root_dir *.svh]]
+set v_files   [list {*}[find_files $root_dir/src *.v] {*}[find_files $root_dir/src *.sv] {*}[find_files $root_dir/hwdbg *.v] {*}[find_files $root_dir/hwdbg *.sv]]
+set vh_files  [list {*}[find_files $root_dir/src *.vh] {*}[find_files $root_dir/src *.svh] {*}[find_files $root_dir/hwdbg *.vh] {*}[find_files $root_dir/hwdbg *.svh]]
 set vhd_files [find_files $root_dir/src *.vhd]
 set xdc_files [find_files $root_dir/constraints *.xdc]
 set src_files [list {*}$v_files {*}$vh_files {*}$vhd_files]
