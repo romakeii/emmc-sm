@@ -214,7 +214,7 @@ signal int_status_reg  : unsigned(4 downto 0);
 begin
 
 -- Form a signal indicating when a response is expected
-expect_response <= '0' when (cmd_index_i=0 or cmd_index_i=4 or cmd_index_i=15) else '1';
+expect_response <= '0' when (cmd_buff(37 downto 32)=0 or cmd_buff(37 downto 32)=4 or cmd_buff(37 downto 32)=15) else '1';
 
 -- Command Finite State Machine
 cmd_fsm_proc : process(sys_rst,sd_clk)
@@ -816,9 +816,9 @@ begin
         elsif (bus_size_reg=1) then
           last_din <=
             "1111" &
-            tx_dat_i(7-(4*to_integer(data_index(0 downto 0)))) & 
-            tx_dat_i(6-(4*to_integer(data_index(0 downto 0)))) & 
-            tx_dat_i(5-(4*to_integer(data_index(0 downto 0)))) & 
+            tx_dat_i(7-(4*to_integer(data_index(0 downto 0)))) &
+            tx_dat_i(6-(4*to_integer(data_index(0 downto 0)))) &
+            tx_dat_i(5-(4*to_integer(data_index(0 downto 0)))) &
             tx_dat_i(4-(4*to_integer(data_index(0 downto 0))));
           crc_in <=
             "1111" &
@@ -1285,7 +1285,7 @@ begin
     end if;
     -- delayed version
     cmd_start_r1 <= cmd_start;
-      
+
 
     if (wb_ack_r1='1' and wb_ack_r2='0') then
       if (wb_we_i='1') then
@@ -1351,7 +1351,7 @@ sd_clk_dds : dds_squarewave
   generic map(
     ACC_BITS => sd_freq_reg'length -- Bit width of DDS phase accumulator
   )
-  port map( 
+  port map(
 
     sys_rst_n    => combo_rst_n,
     sys_clk      => wb_clk_i,
@@ -1392,7 +1392,7 @@ cmd_host_0 : sd_cmd_host
 cmd_with_data <= '1' when cmd_index_reg=20 or cmd_index_reg=24 or cmd_index_reg=25 or
                           cmd_index_reg=8  or cmd_index_reg=11 or cmd_index_reg=17 or
                           cmd_index_reg=18 or cmd_index_reg=14 or cmd_index_reg=19 else '0';
-sd_data_rd    <= '1' when cmd_index_reg=8  or cmd_index_reg=11 or 
+sd_data_rd    <= '1' when cmd_index_reg=8  or cmd_index_reg=11 or
                           cmd_index_reg=17 or cmd_index_reg=18 else '0';
 
   -- SD Data Master Finite State Machine
@@ -1561,4 +1561,3 @@ int_cmd_o  <= '1' when (cmd_int_status_reg or cmd_int_enable_reg)/=0 else '0';
 int_data_o <= '1' when (data_int_status_reg or data_int_enable_reg)/=0 else '0';
 
 end beh;
-

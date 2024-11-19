@@ -81,8 +81,6 @@ module emmc_sm #(
 
 	logic dath_busy;
 	sd_cmd_host sd_cmd_host_inst (
-		.dbg_general(dbg_general),
-		.dbg_states(dbg_states),
 		.sys_rst(arst_i),
 		.sd_clk(sd_clk),
 		.start_i(cmdh_start),
@@ -115,8 +113,6 @@ module emmc_sm #(
 	assign blksize = 512;
 
 	sd_data_8bit_host sd_data_8bit_host_inst (
-		.dbg_general(ddbg_general),
-		.dbg_states(ddbg_states),
 		.sd_clk(sd_clk),
 		.sys_rst(arst_i),
 		.tx_dat_i(dat_i),
