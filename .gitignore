@@ -1,12 +1,15 @@
 *
-!.gitignore
+!./.gitignore
 !README.md
 !constraints/
 !constraints/.gitkeep
 !ip/
 !ip/.gitkeep
 !sim/
-!sim/.gitkeep
+!sim/*.sh
+!sim/*.tcl
+!sim/*.sv
+!sim/*.svh
 !src/
 !src/*.sv
 !src/inc/
@@ -18,3 +21,5 @@
 !vivado/*.tcl
 !auxiliary/
 !auxiliary/*.tcl
+!hwdbg/
+!hwdbg/*.sv
