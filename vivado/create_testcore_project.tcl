@@ -1,6 +1,7 @@
-set launch_dir [pwd]
 set script_dir [file normalize [file dirname [lindex $argv end]]]
-set root_dir [file normalize $script_dir/..]
+source $script_dir/../auxiliary/set_dirs.tcl
+
+cd $script_dir
 
 source "$root_dir/auxiliary/find_files.tcl"
 
