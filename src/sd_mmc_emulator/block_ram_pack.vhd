@@ -22,7 +22,7 @@ package block_ram_pack is
        en_a_i   : in  std_logic;
        dat_a_i  : in  unsigned(dat_width-1 downto 0);
        dat_a_o  : out unsigned(dat_width-1 downto 0);
-       
+
        clk_b    : in  std_logic;
        adr_b_i  : in  unsigned(adr_width-1 downto 0);
        we_b_i   : in  std_logic;
@@ -80,7 +80,7 @@ package block_ram_pack is
        en_a_i   : in  std_logic;
        dat_a_i  : in  unsigned(dat_width-1 downto 0);
        dat_a_o  : out unsigned(dat_width-1 downto 0);
-       
+
        clk_b    : in  std_logic;
        adr_b_i  : in  unsigned(adr_width-1 downto 0);
        we_b_i   : in  std_logic;
@@ -119,7 +119,7 @@ entity block_ram is
        en_a_i   : in  std_logic;
        dat_a_i  : in  unsigned(dat_width-1 downto 0);
        dat_a_o  : out unsigned(dat_width-1 downto 0);
-       
+
        clk_b    : in  std_logic;
        adr_b_i  : in  unsigned(adr_width-1 downto 0);
        we_b_i   : in  std_logic;
@@ -136,8 +136,8 @@ architecture beh of block_ram is
   -- Functions & associated types
     type ram_array is array(0 to 2**ADR_WIDTH-1) of unsigned(DAT_WIDTH-1 downto 0);
     impure function ram_file_init (INIT_FILE : in string) return ram_array is
-      FILE F1 : text is in INIT_FILE; 
-      variable ligne : line;  
+      FILE F1 : text open read_mode is INIT_FILE;
+      variable ligne : line;
       variable rambo : ram_array;
       variable vect  : std_logic_vector(FIL_WIDTH-1 downto 0);
       variable uvect : unsigned(DAT_WIDTH-1 downto 0);
@@ -253,8 +253,8 @@ architecture beh of block_ram_async_reset is
   -- Functions & associated types
     type ram_array is array(0 to 2**ADR_WIDTH-1) of unsigned(DAT_WIDTH-1 downto 0);
     impure function ram_file_init (INIT_FILE : in string) return ram_array is
-      FILE F1 : text is in INIT_FILE; 
-      variable ligne : line;  
+      FILE F1 : text open read_mode is INIT_FILE;
+      variable ligne : line;
       variable rambo : ram_array;
       variable vect  : std_logic_vector(FIL_WIDTH-1 downto 0);
       variable uvect : unsigned(DAT_WIDTH-1 downto 0);
@@ -359,7 +359,7 @@ entity swiss_army_ram is
        en_a_i   : in  std_logic;
        dat_a_i  : in  unsigned(dat_width-1 downto 0);
        dat_a_o  : out unsigned(dat_width-1 downto 0);
-       
+
        clk_b    : in  std_logic;
        adr_b_i  : in  unsigned(adr_width-1 downto 0);
        we_b_i   : in  std_logic;
@@ -376,8 +376,8 @@ architecture beh of swiss_army_ram is
   -- Functions & associated types
     type ram_array is array(0 to 2**ADR_WIDTH-1) of unsigned(DAT_WIDTH-1 downto 0);
     impure function ram_file_init (INIT_FILE : in string) return ram_array is
-      FILE F1 : text is in INIT_FILE; 
-      variable ligne : line;  
+      FILE F1 : text open read_mode is INIT_FILE;
+      variable ligne : line;
       variable rambo : ram_array;
       variable vect  : std_logic_vector(FIL_WIDTH-1 downto 0);
       variable uvect : unsigned(DAT_WIDTH-1 downto 0);
@@ -465,4 +465,3 @@ dat_b_o <= ram1(to_integer(adr_b_i)) when USE_BRAM=0  else
            dat_b_wt;
 
 end beh;
-

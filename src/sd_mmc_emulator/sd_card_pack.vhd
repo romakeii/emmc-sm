@@ -317,7 +317,7 @@ begin
   --crc_clk <= not sd_clk_i;
   crc_clk <= sd_clk_i;
   crc_clr <= '1' when counter=0 else '0';
-  
+
 
 --------------------------------------------
 -- Command receiver
@@ -410,7 +410,7 @@ end beh;
 -- This module automatically populates the first two bits of the reply with
 -- "00", Because all of the replies begin with "00."  The next 6 bits are
 -- supplied by the "resp_index_i" signal.  After that, the next set of bits
--- is supplied by the signal "resp_pyld_i" which stands for 
+-- is supplied by the signal "resp_pyld_i" which stands for
 -- "response payload."  Since the payload could be either 32 bits or 120 bits
 -- long, the payload length is set by the RESP_PYLD_LEN generic.
 --
@@ -436,7 +436,7 @@ end beh;
 -- For instance, the SD/MMC card standard specifies that for identification
 -- responses, exactly 5 clock cycles should exist between the stop bit of
 -- the command, and the start bit of the response.
--- 
+--
 -- Note that this responder runs entirely within the sd_clk_i clock domain.
 -- Therefore, care must be taken when supplying the inputs.  A FIFO can form
 -- a natural "clock domain boundary crossing" or the user may need to
@@ -855,9 +855,9 @@ begin
         elsif (bus_size_reg=1) then
           last_din <=
             "1111" &
-            tx_dat_i(7-(4*to_integer(data_index(0 downto 0)))) & 
-            tx_dat_i(6-(4*to_integer(data_index(0 downto 0)))) & 
-            tx_dat_i(5-(4*to_integer(data_index(0 downto 0)))) & 
+            tx_dat_i(7-(4*to_integer(data_index(0 downto 0)))) &
+            tx_dat_i(6-(4*to_integer(data_index(0 downto 0)))) &
+            tx_dat_i(5-(4*to_integer(data_index(0 downto 0)))) &
             tx_dat_i(4-(4*to_integer(data_index(0 downto 0))));
           crc_in <=
             "1111" &
@@ -1153,14 +1153,14 @@ end beh;
 --
 -- Option 2 requires significant amounts of cleverness, and has not yet been
 -- worked out in the mind of this code author.  However, for option 1, there
--- exists a command in Linux, namely the "dd" command, which can serve to 
+-- exists a command in Linux, namely the "dd" command, which can serve to
 -- access individual sectors, in the fashion shown below.  A software log
 -- file output is shown after each command, helping to illustrate the sequence
 -- of SD/MMC commands and responses which occur as part of the transfer, from
 -- the perspective of the host:
 --
 --   WRITE BLOCK 0 : dd if=/dev/zero of=/dev/mmcblk1 bs=4k count=1
---   
+--
 --   Jan 15 11:45:31 bbb user.debug kernel: [  253.042114] omap_hsmmc 481d8000.mmc: enabled
 --   Jan 15 11:45:31 bbb user.debug kernel: [  253.042235] omap_hsmmc 481d8000.mmc: mmc1: CMD25, argument 0x00000000
 --   Jan 15 11:45:31 bbb user.debug kernel: [  253.042274] omap_hsmmc 481d8000.mmc: IRQ Status is 1
@@ -1170,10 +1170,10 @@ end beh;
 --   Jan 15 11:45:31 bbb user.debug kernel: [  253.096617] omap_hsmmc 481d8000.mmc: mmc1: CMD13, argument 0x00010000
 --   Jan 15 11:45:31 bbb user.debug kernel: [  253.096640] omap_hsmmc 481d8000.mmc: IRQ Status is 1
 --   Jan 15 11:45:31 bbb user.debug kernel: [  253.195201] omap_hsmmc 481d8000.mmc: disabled
---   
---   
+--
+--
 --   WRITE BLOCK 1 : dd if=/dev/zero of=/dev/mmcblk1 bs=4k count=1 seek=1
---   
+--
 --   Jan 15 11:50:19 bbb user.debug kernel: [  541.840549] omap_hsmmc 481d8000.mmc: enabled
 --   Jan 15 11:50:19 bbb user.debug kernel: [  541.840671] omap_hsmmc 481d8000.mmc: mmc1: CMD25, argument 0x00000008
 --   Jan 15 11:50:19 bbb user.debug kernel: [  541.840706] omap_hsmmc 481d8000.mmc: IRQ Status is 1
@@ -1184,10 +1184,10 @@ end beh;
 --   Jan 15 11:50:19 bbb user.debug kernel: [  541.841484] omap_hsmmc 481d8000.mmc: mmc1: CMD13, argument 0x00010000
 --   Jan 15 11:50:19 bbb user.debug kernel: [  541.841506] omap_hsmmc 481d8000.mmc: IRQ Status is 1
 --   Jan 15 11:50:20 bbb user.debug kernel: [  541.934036] omap_hsmmc 481d8000.mmc: disabled
---   
---   
+--
+--
 --   WRITE BLOCK 2 : dd if=/dev/zero of=/dev/mmcblk1 bs=4k count=1 seek=2
---   
+--
 --   Jan 15 11:49:31 bbb user.debug kernel: [  493.057453] omap_hsmmc 481d8000.mmc: enabled
 --   Jan 15 11:49:31 bbb user.debug kernel: [  493.057573] omap_hsmmc 481d8000.mmc: mmc1: CMD25, argument 0x00000010
 --   Jan 15 11:49:31 bbb user.debug kernel: [  493.057610] omap_hsmmc 481d8000.mmc: IRQ Status is 1
@@ -1198,7 +1198,7 @@ end beh;
 --   Jan 15 11:49:31 bbb user.debug kernel: [  493.058357] omap_hsmmc 481d8000.mmc: mmc1: CMD13, argument 0x00010000
 --   Jan 15 11:49:31 bbb user.debug kernel: [  493.058379] omap_hsmmc 481d8000.mmc: IRQ Status is 1
 --   Jan 15 11:49:31 bbb user.debug kernel: [  493.150608] omap_hsmmc 481d8000.mmc: disabled
---   
+--
 --
 -- This SD/MMC card emulator can implement the following response types:
 --
@@ -1216,7 +1216,7 @@ end beh;
 --
 -- The R4 and R5 response types are optional, and can be de-selected by
 -- setting generics to zero.
--- 
+--
 -- Boot modes are not supported, although they probably could be with a
 -- modicum of additional work.  The states are already provided in the card
 -- state machine, along with some comments detailing what needs to be done.
@@ -1398,7 +1398,7 @@ signal sd_cmd_oe_l        : std_logic;
   -- Related to Card Finite State Machine
 type CARD_STATE_TYPE is (CARD_IDLE, CARD_READY, CARD_IDENT, CARD_STBY,
                          CARD_TRAN, CARD_DATA, CARD_RCV,
-                         CARD_PRG,  CARD_DIS,  CARD_BTST, CARD_SLP, CARD_INA, 
+                         CARD_PRG,  CARD_DIS,  CARD_BTST, CARD_SLP, CARD_INA,
                          CARD_IRQ,  CARD_PRE_IDLE, CARD_PRE_BOOT, CARD_BOOT);
 signal card_state       : CARD_STATE_TYPE;
 signal card_state_reply : CARD_STATE_TYPE; -- For reporting in status
@@ -1586,7 +1586,7 @@ ocr <= ocr_pwrup_done & ocr_mode & "00000" & "111111111" & "0000000" & ocr_vbit 
       INIT_VAL  => 0, -- Value used when INIT_FILE is not used
       INIT_SEL  => 0, -- Selects which segment of (larger) INIT_FILE to use
       INIT_FILE => EXT_CSD_INIT_FILE, -- ASCII hexadecimal initialization file name
-      FIL_WIDTH => 8, -- Bit width of init file lines
+      FIL_WIDTH => 32, -- Bit width of init file lines
       ADR_WIDTH => 9,
       DAT_WIDTH => 8
     )
@@ -1657,7 +1657,7 @@ ocr <= ocr_pwrup_done & ocr_mode & "00000" & "111111111" & "0000000" & ocr_vbit 
     stop_err_o  => open
   );
   -- Create an indication that this card is being addressed
-  sd_adr_match <= '1' when sd_cmd_arg(31 downto 16)=rca else '0'; 
+  sd_adr_match <= '1' when sd_cmd_arg(31 downto 16)=rca else '0';
   -- Create a signal that indicates when a "neverbad" command is received
   sd_cmd_neverbad <= '1' when sd_cmd_index=0 or sd_cmd_index=15 or sd_cmd_index=55 else '0';
 
@@ -2326,7 +2326,7 @@ begin
         -- the event trigger occurs, then issue the r5_start pulse.
         -- The host has a mechanism for generating a "pseudo reply" at RCA
         -- of 0x0000, which is supposed to cause this state to exit.
-        -- 
+        --
         -- "Any start bit on the bus" exits this state
         -- The method used here is to wait for the command to finish
         -- being received, instead of actually looking for the start
@@ -2949,4 +2949,3 @@ mmc_1 : sd_card_emulator
     ram_we <= '1' when buf_dat_we='1' and buf_adr(buf_adr'length-1 downto RAM_ADR_WIDTH)=0 else '0';
 
 end beh;
-
