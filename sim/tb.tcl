@@ -43,8 +43,17 @@ add wave -divider
 add wave emmc_sm_inst/orig_state
 add wave emmc_sm_inst/curr_state
 add wave emmc_sm_inst/next_state
+add wave emmc_sm_inst/cmdh_int_status
+add wave emmc_sm_inst/sd_cmd_host_inst/serial_state
+add wave emmc_sm_inst/sd_cmd_host_inst/cmd_state
+add wave emmc_sm_inst/sd_cmd_host_inst/crc_val
+add wave emmc_sm_inst/sd_cmd_host_inst/crc_in
+add wave emmc_sm_inst/sd_cmd_host_inst/busy_i
+# add wave emmc_sm_inst/cmdh_response_0
 add wave -divider
 add wave mmc_data_pipe_inst/mmc_1/card_state
+add wave mmc_data_pipe_inst/mmc_cmd_i
+add wave mmc_data_pipe_inst/mmc_cmd_o
 
-run 10000ns
+run 5000ns
 wave zoom full

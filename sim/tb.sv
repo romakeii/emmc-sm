@@ -32,13 +32,27 @@ module tb;
 	logic dvalid;
 	logic ready;
 
+	logic emmc_cmd_wr2mem;
+	assign emmc_cmd_wr2mem = emmc_cmd_oe ? emmc_cmd_wr : 'z;
+
+	logic [$bits(emmc_dat_wr) - 1 : 0] emmc_dat_wr2mem;
+	assign emmc_dat_wr2mem = emmc_dat_oe ? emmc_dat_wr : 'z;
+
+	logic mmc_cmd_oe;
+	logic emmc_cmd_rdfrommem;
+	assign emmc_cmd_rdfrommem = mmc_cmd_oe ? emmc_cmd_rd : 'z;
+
+	logic mmc_dat_oe;
+	logic [$bits(emmc_dat_rd) - 1 : 0] emmc_dat_rdfrommem;
+	assign emmc_dat_rdfrommem = mmc_dat_oe ? emmc_dat_rd : 'z;
+
 	emmc_sm emmc_sm_inst (
 		.clk_i(clk_core),
 		.arst_i(rst),
-		.emmc_cmd_i(emmc_cmd_rd),
+		.emmc_cmd_i(emmc_cmd_rdfrommem),
 		.emmc_cmd_o(emmc_cmd_wr),
 		.emmc_cmd_oe_o(emmc_cmd_oe),
-		.emmc_dat_i(emmc_dat_rd),
+		.emmc_dat_i(emmc_dat_rdfrommem),
 		.emmc_dat_o(emmc_dat_wr),
 		.emmc_dat_oe_o(emmc_dat_oe),
 		.emmc_dat_siz_o(emmc_dat_siz),
@@ -63,9 +77,8 @@ module tb;
 			dat_wr_eeprom <= ~dat_wr_eeprom;
 		end
 	end
-
 	mmc_data_pipe mmc_data_pipe_inst (
-		.sys_rst_n     (rst),
+		.sys_rst_n     (~rst),
 		.sys_clk       (clk_core),
 
 		.adr_i         (),
@@ -76,27 +89,27 @@ module tb;
 		.ack_o         (),
 
 		.mmc_clk_i     (clk_core),
-		.mmc_cmd_i     (emmc_cmd_wr),
+		.mmc_cmd_i     (emmc_cmd_wr2mem),
 		.mmc_cmd_o     (emmc_cmd_rd),
-		.mmc_cmd_oe_o  (),
+		.mmc_cmd_oe_o  (mmc_cmd_oe),
 		.mmc_od_mode_o (),
-		.mmc_dat_i     (emmc_dat_wr),
+		.mmc_dat_i     (emmc_dat_wr2mem),
 		.mmc_dat_o     (emmc_dat_rd),
-		.mmc_dat_oe_o  (),
+		.mmc_dat_oe_o  (mmc_dat_oe),
 		.mmc_dat_siz_o (),
 
-		.wr_clk_i      (),
-		.wr_clk_en_i   (),
-		.wr_reset_i    (),
+		.wr_clk_i      (clk_core),
+		.wr_clk_en_i   (1'b1),
+		.wr_reset_i    (rst),
 		.wr_en_i       (),
 		.wr_dat_i      (),
 		.wr_fifo_level (),
 		.wr_fifo_full  (),
 		.wr_fifo_empty (),
 
-		.rd_clk_i      (),
-		.rd_clk_en_i   (),
-		.rd_reset_i    (),
+		.rd_clk_i      (clk_core),
+		.rd_clk_en_i   (1'b1),
+		.rd_reset_i    (rst),
 		.rd_en_i       (),
 		.rd_dat_o      (),
 		.rd_fifo_level (),
