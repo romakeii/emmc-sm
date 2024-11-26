@@ -32,7 +32,8 @@ foreach txt_file [find_files $src_dir/sd_mmc_emulator *.txt] {
 
 foreach v_file $v_files {vlog -sv +incdir+$src_dir/inc $v_file}
 vcom_recursive [find_files $src_dir/sd_mmc_emulator *pack.vhd]
-foreach vhd_file $vhd_files {vcom -2002 $vhd_file}
+foreach vhd_file $vhd_files {vcom -2008 $vhd_file}
+
 vlog -sv +incdir+$src_dir/inc+$sim_dir $root_dir/sim/tb.sv
 
 vsim -g emmc_sm_inst/___SIMULATION___=1 -t 1ps -voptargs="+acc" tb
@@ -43,17 +44,17 @@ add wave -divider
 add wave emmc_sm_inst/orig_state
 add wave emmc_sm_inst/curr_state
 add wave emmc_sm_inst/next_state
-add wave emmc_sm_inst/cmdh_int_status
+add wave -divider
 add wave emmc_sm_inst/sd_cmd_host_inst/serial_state
 add wave emmc_sm_inst/sd_cmd_host_inst/cmd_state
-add wave emmc_sm_inst/sd_cmd_host_inst/crc_val
-add wave emmc_sm_inst/sd_cmd_host_inst/crc_in
-add wave emmc_sm_inst/sd_cmd_host_inst/busy_i
-# add wave emmc_sm_inst/cmdh_response_0
+add wave -divider
+add wave emmc_sm_inst/sd_data_8bit_host_inst/state
+add wave -divider
+add wave -divider
+add wave emmc_sm_inst/sd_data_8bit_host_inst/sd_clk
+add wave emmc_sm_inst/sd_data_8bit_host_inst/crc_rst_n
 add wave -divider
 add wave mmc_data_pipe_inst/mmc_1/card_state
-add wave mmc_data_pipe_inst/mmc_cmd_i
-add wave mmc_data_pipe_inst/mmc_cmd_o
 
-run 5000ns
+run 15000ns
 wave zoom full

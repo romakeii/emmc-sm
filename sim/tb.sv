@@ -79,7 +79,7 @@ module tb;
 	end
 	mmc_data_pipe mmc_data_pipe_inst (
 		.sys_rst_n     (~rst),
-		.sys_clk       (clk_core),
+		.sys_clk       (~clk_core),
 
 		.adr_i         (),
 		.sel_i         (),
@@ -88,7 +88,7 @@ module tb;
 		.dat_o         (),
 		.ack_o         (),
 
-		.mmc_clk_i     (clk_core),
+		.mmc_clk_i     (~clk_core),
 		.mmc_cmd_i     (emmc_cmd_wr2mem),
 		.mmc_cmd_o     (emmc_cmd_rd),
 		.mmc_cmd_oe_o  (mmc_cmd_oe),
@@ -98,7 +98,7 @@ module tb;
 		.mmc_dat_oe_o  (mmc_dat_oe),
 		.mmc_dat_siz_o (),
 
-		.wr_clk_i      (clk_core),
+		.wr_clk_i      (~clk_core),
 		.wr_clk_en_i   (1'b1),
 		.wr_reset_i    (rst),
 		.wr_en_i       (),
@@ -107,7 +107,7 @@ module tb;
 		.wr_fifo_full  (),
 		.wr_fifo_empty (),
 
-		.rd_clk_i      (clk_core),
+		.rd_clk_i      (~clk_core),
 		.rd_clk_en_i   (1'b1),
 		.rd_reset_i    (rst),
 		.rd_en_i       (),
