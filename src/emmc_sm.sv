@@ -195,7 +195,7 @@ module emmc_sm #(
 		enbl_bus_size_change = '0;
 		case (curr_state)
 			emmc_sm_p::WAIT_CMD: begin
-				// State change enabled then CMD was received propertly
+				// State change is enabled then CMD was received propertly
 				state_change_enbl = cmdh_int_status.cc;
 				case (orig_state)
 					emmc_sm_p::INIT_IDLE: begin
@@ -320,10 +320,10 @@ module emmc_sm #(
 				state_change_enbl = start_i;
 			end
 			emmc_sm_p::DO_WRITE: begin
-				`__SETUP_WAIT_FOR_CMD__(24, 0); // cmd wait for this state is chained with dat wait
+				`__SETUP_WAIT_FOR_CMD__(24, 0); // CMD_WAIT state for this (DO_WRITE) state is chained with DAT_WAIT
 			end
 			emmc_sm_p::DO_READ: begin
-				`__SETUP_WAIT_FOR_CMD__(17, 0); // cmd wait for this state is chained with dat wait
+				`__SETUP_WAIT_FOR_CMD__(17, 0); // CMD_WAIT state for this (DO_READ) state is chained with DAT_WAIT
 			end
 			emmc_sm_p::DO_NOTHING: begin
 				next_state = emmc_sm_p::DO_NOTHING;
