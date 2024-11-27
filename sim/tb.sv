@@ -72,14 +72,17 @@ module tb;
 		if(rst) begin
 			we <= '1;
 			dat_wr_eeprom <= 'h55;
-		end else begin
+		end else if(ready) begin
 			we <= ~we;
 			dat_wr_eeprom <= ~dat_wr_eeprom;
 		end
 	end
+
+	logic clk_mmc;
+	assign clk_mmc = clk_core;
 	mmc_data_pipe mmc_data_pipe_inst (
 		.sys_rst_n     (~rst),
-		.sys_clk       (~clk_core),
+		.sys_clk       (clk_mmc),
 
 		.adr_i         (),
 		.sel_i         (),
@@ -88,7 +91,7 @@ module tb;
 		.dat_o         (),
 		.ack_o         (),
 
-		.mmc_clk_i     (~clk_core),
+		.mmc_clk_i     (clk_mmc),
 		.mmc_cmd_i     (emmc_cmd_wr2mem),
 		.mmc_cmd_o     (emmc_cmd_rd),
 		.mmc_cmd_oe_o  (mmc_cmd_oe),
@@ -98,7 +101,7 @@ module tb;
 		.mmc_dat_oe_o  (mmc_dat_oe),
 		.mmc_dat_siz_o (),
 
-		.wr_clk_i      (~clk_core),
+		.wr_clk_i      (clk_mmc),
 		.wr_clk_en_i   (1'b1),
 		.wr_reset_i    (rst),
 		.wr_en_i       (),
@@ -107,7 +110,7 @@ module tb;
 		.wr_fifo_full  (),
 		.wr_fifo_empty (),
 
-		.rd_clk_i      (~clk_core),
+		.rd_clk_i      (clk_mmc),
 		.rd_clk_en_i   (1'b1),
 		.rd_reset_i    (rst),
 		.rd_en_i       (),
