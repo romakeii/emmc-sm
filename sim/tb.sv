@@ -74,7 +74,7 @@ module tb;
 			dat_wr_eeprom <= 'h55;
 		end else if(ready) begin
 			we <= ~we;
-			dat_wr_eeprom <= ~dat_wr_eeprom;
+			if(we) dat_wr_eeprom <= ~dat_wr_eeprom; // preparing next value to be written
 		end
 	end
 
