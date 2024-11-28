@@ -222,11 +222,6 @@ module emmc_sm #(
 					end
 					emmc_sm_p::INIT_TRAN: begin
 						next_state = emmc_sm_p::INIT_GET_CSD_EXT;
-						// The next line of code should be here and not in WAIT_DAT state description
-						// The reason fot that is if it was in the WAIT_DAT state, and card responded with data quickly enough,
-						// it would be a situation when host isn't ready for data receive
-						// Here we are getting the host ready to receive a data preemptively
-						dath_read = state_changed;
 					end
 					// wait for cmd to wait for busy
 					emmc_sm_p::INIT_GO_FAST,
@@ -236,8 +231,16 @@ module emmc_sm #(
 					end
 					// wait for cmd to wait for dat
 					emmc_sm_p::INIT_GET_CSD_EXT,
-					emmc_sm_p::DO_WRITE,
 					emmc_sm_p::DO_READ: begin
+						next_state = emmc_sm_p::WAIT_DAT;
+						orig_state_pend = orig_state;
+						// The next line of code should be here and not in WAIT_DAT state description
+						// The reason fot that is if it was in the WAIT_DAT state, and card responded with data quickly enough,
+						// it would be a situation when host isn't ready for data receive
+						// Here we are getting the host ready to receive a data preemptively
+						dath_read = state_changed;
+					end
+					emmc_sm_p::DO_WRITE: begin
 						next_state = emmc_sm_p::WAIT_DAT;
 						orig_state_pend = orig_state;
 					end
