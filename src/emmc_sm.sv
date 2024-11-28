@@ -313,20 +313,20 @@ module emmc_sm #(
 				`__SETUP_WAIT_FOR_CMD__(8, 0);
 			end
 			emmc_sm_p::INIT_GO_FAST: begin
-				`__SETUP_WAIT_FOR_CMD__(6, 32'h03b90100);
+				`__SETUP_WAIT_FOR_CMD__(6, 32'h03b90100); // See Annex A8.2.24 in JEDEC eMMC Std v4.41
 			end
 			emmc_sm_p::INIT_SET_DWIDTH: begin
-				`__SETUP_WAIT_FOR_CMD__(6, 32'h03B70200);
+				`__SETUP_WAIT_FOR_CMD__(6, 32'h03B70200); // See Annex A8.3.36 in JEDEC eMMC Std v4.41
 			end
 			emmc_sm_p::DO_IDLE: begin
 				next_state = we_i ? emmc_sm_p::DO_WRITE : emmc_sm_p::DO_READ;
 				state_change_enbl = start_i;
 			end
 			emmc_sm_p::DO_WRITE: begin
-				`__SETUP_WAIT_FOR_CMD__(24, 0); // CMD_WAIT state for this (DO_WRITE) state is chained with DAT_WAIT
+				`__SETUP_WAIT_FOR_CMD__(24, 0); // *
 			end
 			emmc_sm_p::DO_READ: begin
-				`__SETUP_WAIT_FOR_CMD__(17, 0); // CMD_WAIT state for this (DO_READ) state is chained with DAT_WAIT
+				`__SETUP_WAIT_FOR_CMD__(17, 0); // *
 			end
 			emmc_sm_p::DO_NOTHING: begin
 				next_state = emmc_sm_p::DO_NOTHING;
@@ -334,6 +334,7 @@ module emmc_sm #(
 			end
 		endcase
 	end
+	// * - Current state switches to CMD_WAIT state, then to DAT_WAIT state, and after that returns back to current state
 
 	always_ff @(posedge clk_i or posedge arst_i) begin
 		if(arst_i)                 {orig_state, curr_state} <= {emmc_sm_p::START, emmc_sm_p::START};
