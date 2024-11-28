@@ -47,7 +47,6 @@ module emmc_sm #(
 	jedec_p::csd_t csd;
 	jedec_p::ext_csd_t ext_csd;
 
-
 	localparam logic [31 : 0] CARD_ADDR_ARG = 32'h40000;
 
 	logic [31 : 0] cmdh_response_0;
@@ -180,7 +179,7 @@ module emmc_sm #(
 	end
 
 	always_comb begin
-		next_state = emmc_sm_p::START;
+		next_state = emmc_sm_p::INIT_START;
 		state_change_enbl = '0;
 		orig_state_pend = curr_state;
 		mp_cntr_rst = 1;
@@ -286,7 +285,7 @@ module emmc_sm #(
 					end
 				endcase
 			end
-			emmc_sm_p::START: begin
+			emmc_sm_p::INIT_START: begin
 				next_state = emmc_sm_p::INIT_IDLE;
 				state_change_enbl = mp_cntr > 450;
 				mp_cntr_use(1);
@@ -312,21 +311,21 @@ module emmc_sm #(
 			emmc_sm_p::INIT_GET_CSD_EXT: begin
 				`__SETUP_WAIT_FOR_CMD__(8, 0);
 			end
-			emmc_sm_p::INIT_GO_FAST: begin
+			emmc_sm_p::INIT_GO_FAST: begin // *
 				`__SETUP_WAIT_FOR_CMD__(6, 32'h03b90100); // See Annex A8.2.24 in JEDEC eMMC Std v4.41
 			end
-			emmc_sm_p::INIT_SET_DWIDTH: begin
+			emmc_sm_p::INIT_SET_DWIDTH: begin // *
 				`__SETUP_WAIT_FOR_CMD__(6, 32'h03B70200); // See Annex A8.3.36 in JEDEC eMMC Std v4.41
 			end
 			emmc_sm_p::DO_IDLE: begin
 				next_state = we_i ? emmc_sm_p::DO_WRITE : emmc_sm_p::DO_READ;
 				state_change_enbl = start_i;
 			end
-			emmc_sm_p::DO_WRITE: begin
-				`__SETUP_WAIT_FOR_CMD__(24, 0); // *
+			emmc_sm_p::DO_WRITE: begin // **
+				`__SETUP_WAIT_FOR_CMD__(24, 0);
 			end
-			emmc_sm_p::DO_READ: begin
-				`__SETUP_WAIT_FOR_CMD__(17, 0); // *
+			emmc_sm_p::DO_READ: begin // **
+				`__SETUP_WAIT_FOR_CMD__(17, 0);
 			end
 			emmc_sm_p::DO_NOTHING: begin
 				next_state = emmc_sm_p::DO_NOTHING;
@@ -334,10 +333,11 @@ module emmc_sm #(
 			end
 		endcase
 	end
-	// * - Current state switches to CMD_WAIT state, then to DAT_WAIT state, and after that returns back to current state
+	// *  - Current state switches to WAIT_CMD state, then to WAIT_BUSY state, and after that returns back to current state
+	// ** - Current state switches to WAIT_CMD state, then to WAIT_DAT state, and after that returns back to current state
 
 	always_ff @(posedge clk_i or posedge arst_i) begin
-		if(arst_i)                 {orig_state, curr_state} <= {emmc_sm_p::START, emmc_sm_p::START};
+		if(arst_i)                 {orig_state, curr_state} <= {emmc_sm_p::INIT_START, emmc_sm_p::INIT_START};
 		else if(state_change_enbl) {orig_state, curr_state} <= {orig_state_pend, next_state};
 	end
 
