@@ -58,6 +58,7 @@ module tb;
 		.emmc_dat_siz_o(emmc_dat_siz),
 		.sel_clk_o(sel_clk),
 
+		.blk_cnt_i(2),
 		.we_i(we),
 		.start_i(start),
 		.dat_i(dat_wr_eeprom),

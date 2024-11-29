@@ -299,6 +299,10 @@ package jedec_p;
 		logic [1 : 0] reserved_d;
 	} card_status_t;
 
+	// Miscel
+
+	localparam int unsigned BLK_CNT_WIDTH = 16;
+
 endpackage
 
 `endif

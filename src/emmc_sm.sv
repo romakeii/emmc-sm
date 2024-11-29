@@ -36,6 +36,7 @@ module emmc_sm #(
 	// Interface
 	input logic we_i,
 	input logic start_i,
+	input logic [jedec_p::BLK_CNT_WIDTH - 1 : 0] blk_cnt_i,
 	input logic [7 : 0] dat_i,
 	output logic [7 : 0] dat_o,
 	output logic dvalid_o,
@@ -108,6 +109,7 @@ module emmc_sm #(
 	logic dath_crc_ok;
 	logic [15 : 0] ddbg_general;
 	logic [1 : 0] dath_bus_size;
+	logic [jedec_p::BLK_CNT_WIDTH - 1 : 0] dath_blk_cnt;
 	logic [11 : 0] blksize;
 	assign blksize = 512;
 
@@ -124,7 +126,7 @@ module emmc_sm #(
 		.sd_dat_i(emmc_dat_i),
 		.blksize_i(blksize),
 		.bus_size_i(dath_bus_size),
-		.blkcnt_i(16'h0000),
+		.blkcnt_i(dath_blk_cnt),
 		.d_stop_i(dath_stop),
 		.d_read_i(dath_read),
 		.d_write_i(dath_write),
@@ -230,7 +232,8 @@ module emmc_sm #(
 					end
 					// wait for cmd to wait for dat
 					emmc_sm_p::INIT_GET_CSD_EXT,
-					emmc_sm_p::DO_READ: begin
+					emmc_sm_p::DO_SBLK_READ,
+					emmc_sm_p::DO_MBLK_READ: begin
 						next_state = emmc_sm_p::WAIT_DAT;
 						orig_state_pend = orig_state;
 						// The next line of code should be here and not in WAIT_DAT state description
@@ -239,9 +242,13 @@ module emmc_sm #(
 						// Here we are getting the host ready to receive a data preemptively
 						dath_read = state_changed;
 					end
-					emmc_sm_p::DO_WRITE: begin
+					emmc_sm_p::DO_SBLK_WRITE,
+					emmc_sm_p::DO_MBLK_WRITE: begin
 						next_state = emmc_sm_p::WAIT_DAT;
 						orig_state_pend = orig_state;
+					end
+					emmc_sm_p::DO_STOP_TRANSACT: begin
+						next_state = emmc_sm_p::DO_IDLE;
 					end
 					default: begin
 						next_state = emmc_sm_p::ERR;
@@ -254,12 +261,20 @@ module emmc_sm #(
 					emmc_sm_p::INIT_GET_CSD_EXT: begin
 						next_state = emmc_sm_p::INIT_GO_FAST;
 					end
-					emmc_sm_p::DO_WRITE: begin
+					emmc_sm_p::DO_SBLK_WRITE: begin
 						next_state = emmc_sm_p::DO_IDLE;
 						dath_write = state_changed;
 					end
-					emmc_sm_p::DO_READ: begin
+					emmc_sm_p::DO_MBLK_WRITE: begin
+						next_state = emmc_sm_p::DO_STOP_TRANSACT;
+						dath_write = state_changed;
+					end
+					emmc_sm_p::DO_SBLK_READ: begin
 						next_state = emmc_sm_p::DO_IDLE;
+						dath_read = state_changed;
+					end
+					emmc_sm_p::DO_MBLK_READ: begin
+						next_state = emmc_sm_p::DO_STOP_TRANSACT;
 						dath_read = state_changed;
 					end
 					default: begin
@@ -318,14 +333,25 @@ module emmc_sm #(
 				`__SETUP_WAIT_FOR_CMD__(6, 32'h03B70200); // See Annex A8.3.36 in JEDEC eMMC Std v4.41
 			end
 			emmc_sm_p::DO_IDLE: begin
-				next_state = we_i ? emmc_sm_p::DO_WRITE : emmc_sm_p::DO_READ;
+				if(blk_cnt_i == 0)      next_state = emmc_sm_p::DO_IDLE;
+				else if(blk_cnt_i == 1) next_state = we_i ? emmc_sm_p::DO_SBLK_WRITE : emmc_sm_p::DO_SBLK_READ;
+				else                    next_state = we_i ? emmc_sm_p::DO_MBLK_WRITE : emmc_sm_p::DO_MBLK_READ;
 				state_change_enbl = start_i;
 			end
-			emmc_sm_p::DO_WRITE: begin // **
+			emmc_sm_p::DO_SBLK_WRITE: begin // **
 				`__SETUP_WAIT_FOR_CMD__(24, 0);
 			end
-			emmc_sm_p::DO_READ: begin // **
+			emmc_sm_p::DO_SBLK_READ: begin // **
 				`__SETUP_WAIT_FOR_CMD__(17, 0);
+			end
+			emmc_sm_p::DO_MBLK_WRITE: begin // **
+				`__SETUP_WAIT_FOR_CMD__(25, 0);
+			end
+			emmc_sm_p::DO_MBLK_READ: begin // **
+				`__SETUP_WAIT_FOR_CMD__(18, 0);
+			end
+			emmc_sm_p::DO_STOP_TRANSACT: begin
+				`__SETUP_WAIT_FOR_CMD__(12, 0);
 			end
 			emmc_sm_p::DO_NOTHING: begin
 				next_state = emmc_sm_p::DO_NOTHING;
@@ -360,5 +386,7 @@ module emmc_sm #(
 			end
 		end
 	end
+
+	always_ff @(posedge clk_i) if(curr_state == emmc_sm_p::DO_IDLE) dath_blk_cnt <= blk_cnt_i;
 
 endmodule

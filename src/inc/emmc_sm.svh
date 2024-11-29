@@ -6,7 +6,7 @@
 package emmc_sm_p;
 
 	typedef enum {
-		START,
+		INIT_START,
 		WAIT_CMD,
 		WAIT_DAT,
 		WAIT_BUSY,
@@ -20,8 +20,11 @@ package emmc_sm_p;
 		INIT_GO_FAST,
 		INIT_SET_DWIDTH,
 		DO_IDLE,
-		DO_WRITE,
-		DO_READ,
+		DO_SBLK_WRITE,
+		DO_SBLK_READ,
+		DO_MBLK_WRITE,
+		DO_MBLK_READ,
+		DO_STOP_TRANSACT,
 		DO_NOTHING,
 		IDLE,
 		ERR

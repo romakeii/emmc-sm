@@ -50,11 +50,10 @@ add wave emmc_sm_inst/sd_cmd_host_inst/cmd_state
 add wave -divider
 add wave emmc_sm_inst/sd_data_8bit_host_inst/state
 add wave -divider
-add wave -divider
-add wave emmc_sm_inst/sd_data_8bit_host_inst/sd_clk
-add wave emmc_sm_inst/sd_data_8bit_host_inst/crc_rst_n
-add wave -divider
 add wave mmc_data_pipe_inst/mmc_1/card_state
+add wave -divider
+add wave emmc_dat_wr
+add wave emmc_dat_rd
 
-run 15000ns
+run 20000ns
 wave zoom full
