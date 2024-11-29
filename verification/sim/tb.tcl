@@ -1,5 +1,5 @@
 set script_dir [file normalize [file dirname [lindex $argv end]]]
-source $script_dir/../auxiliary/set_dirs.tcl
+source $script_dir/../../auxiliary/set_dirs.tcl
 source $auxiliary_dir/find_files.tcl
 source $auxiliary_dir/vcom_recursive.tcl
 
@@ -34,7 +34,7 @@ foreach v_file $v_files {vlog -sv +incdir+$src_dir/inc $v_file}
 vcom_recursive [find_files $src_dir/sd_mmc_emulator *pack.vhd]
 foreach vhd_file $vhd_files {vcom -2008 $vhd_file}
 
-vlog -sv +incdir+$src_dir/inc+$sim_dir $root_dir/sim/tb.sv
+vlog -sv +incdir+$src_dir/inc+$sim_dir $sim_dir/tb.sv
 
 vsim -g emmc_sm_inst/___SIMULATION___=1 -t 1ps -voptargs="+acc" tb
 

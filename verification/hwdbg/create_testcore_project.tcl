@@ -1,3 +1,5 @@
+# Was used with Vivado 2020.2
+
 set script_dir [file normalize [file dirname [lindex $argv end]]]
 source $script_dir/../auxiliary/set_dirs.tcl
 
@@ -29,6 +31,7 @@ set_property -name "source_mgmt_mode" -value "DisplayOnly" -objects $project
 set_property -name "xpm_libraries" -value "XPM_CDC XPM_MEMORY" -objects $project
 
 if {[llength $src_files] != 0} {add_files -norecurse -fileset [get_filesets sources_1] $src_files}
+if {[llength $xdc_files] != 0} {add_files -norecurse -fileset [get_filesets constrs_1] $xdc_files}
 
 if {[llength $vhd_files] != 0} {set_property -name "file_type" -value "VHDL 2008" -objects [get_files -of_objects [get_filesets sources_1] *.vhd]}
 if {[llength $vh_files] != 0} {set_property -name "file_type" -value "Verilog Header" -objects [get_files -of_objects [get_filesets sources_1] *.*vh]}
@@ -36,6 +39,7 @@ if {[llength $v_files] != 0} {set_property -name "file_type" -value "SystemVeril
 
 set_property -name "top" -value "testcore" -objects [get_filesets sources_1]
 
+file mkdir $root_dir/ip
 create_ip -vlnv {xilinx.com:ip:vio:3.0} -module vio -dir $root_dir/ip/
 set_property -dict [list \
 	CONFIG.C_EN_PROBE_IN_ACTIVITY {0} \

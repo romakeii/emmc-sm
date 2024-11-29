@@ -15,12 +15,13 @@ while {1} {
 		set root_dir [file normalize $root_dir/..]
 	}
 }
-set root_dir [file normalize $root_dir/..]
+set root_dir [file normalize $root_dir/../..]
 
 set src_dir [file normalize $root_dir/src]
-set sim_dir [file normalize $root_dir/sim]
+set verification_dir [file normalize $root_dir/verification]
+set sim_dir [file normalize $verification_dir/sim]
 set auxiliary_dir [file normalize $root_dir/auxiliary]
 set constraints_dir [file normalize $root_dir/constraints]
-set hwdbg_dir [file normalize $root_dir/hwdbg]
+set hwdbg_dir [file normalize $verification_dir/hwdbg]
 set ip_dir [file normalize $root_dir/ip]
 set vivado_dir [file normalize $root_dir/vivado]
