@@ -2,9 +2,6 @@
 !./.gitignore
 !README.md
 !constraints/
-!constraints/.gitkeep
-!ip/
-!ip/.gitkeep
 !sim/
 !sim/*.sh
 !sim/*.tcl
