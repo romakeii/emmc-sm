@@ -17,7 +17,13 @@ proc omt {} {
 	do $script_dir/tb.tcl
 }
 
-set v_files   [list {*}[find_files $src_dir *.v] {*}[find_files $src_dir *.sv] {*}[find_files $hwdbg_dir *.v] {*}[find_files $hwdbg_dir *.sv]]
+set v_files   [list \
+	{*}[find_files $src_dir *.v] \
+	{*}[find_files $src_dir *.sv] \
+	{*}[find_files $sim_dir *.v] \
+	{*}[find_files $sim_dir *.sv] \
+	{*}[find_files $verification_dir *.sv] \
+	{*}[find_files $verification_dir *.v] ]
 set vhd_files [find_files $src_dir *.vhd]
 
 cd $sim_dir

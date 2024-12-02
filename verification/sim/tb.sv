@@ -68,16 +68,14 @@ module tb;
 	);
 	assign clk_core = sel_clk ? clk : clk_divided;
 
-	assign start = 1;
-	always_ff @(posedge clk_core or posedge rst) begin
-		if(rst) begin
-			we <= '1;
-			dat_wr_eeprom <= 'h55;
-		end else if(ready) begin
-			we <= ~we;
-			if(we) dat_wr_eeprom <= ~dat_wr_eeprom; // preparing next value to be written
-		end
-	end
+	driver driver_inst (
+		.clk_i(clk_core),
+		.arst_i(rst),
+		.host_ready(ready),
+		.host_we(we),
+		.host_start(start),
+		.host_wr_dat(dat_wr_eeprom)
+	);
 
 	logic clk_mmc;
 	assign clk_mmc = clk_core;
