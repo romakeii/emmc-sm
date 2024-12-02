@@ -1,30 +1,30 @@
 # Was used with Vivado 2020.2
 
 set script_dir [file normalize [file dirname [lindex $argv end]]]
-source $script_dir/../auxiliary/set_dirs.tcl
+source $script_dir/../../auxiliary/set_dirs.tcl
 
 cd $script_dir
 
-source "$root_dir/auxiliary/find_files.tcl"
+source "$auxiliary_dir/find_files.tcl"
 
 set proj_name "testcore"
 
-set v_files   [list {*}[find_files $root_dir/src *.v] {*}[find_files $root_dir/src *.sv] {*}[find_files $root_dir/hwdbg *.v] {*}[find_files $root_dir/hwdbg *.sv]]
-set vh_files  [list {*}[find_files $root_dir/src *.vh] {*}[find_files $root_dir/src *.svh] {*}[find_files $root_dir/hwdbg *.vh] {*}[find_files $root_dir/hwdbg *.svh]]
-set vhd_files [find_files $root_dir/src *.vhd]
-set xdc_files [find_files $root_dir/constraints *.xdc]
+set v_files   [list {*}[find_files $src_dir *.v] {*}[find_files $src_dir *.sv] {*}[find_files $hwdbg_dir *.v] {*}[find_files $hwdbg_dir *.sv]]
+set vh_files  [list {*}[find_files $src_dir *.vh] {*}[find_files $src_dir *.svh] {*}[find_files $hwdbg_dir *.vh] {*}[find_files $hwdbg_dir *.svh]]
+set vhd_files [find_files $src_dir *.vhd]
+set xdc_files [find_files $constraints_dir *.xdc]
 set src_files [list {*}$v_files {*}$vh_files {*}$vhd_files]
 
-create_project $proj_name $root_dir/vivado -part xc7a35tcpg236-1 -force
+create_project $proj_name $hwdbg_dir/testcore -part xc7a35tcpg236-1 -force
 
 set project [current_project]
 set_property -name "default_lib" -value "xil_defaultlib" -objects $project
 set_property -name "enable_vhdl_2008" -value "1" -objects $project
 set_property -name "ip_cache_permissions" -value "read write" -objects $project
-set_property -name "ip_output_repo" -value "$root_dir/ip" -objects $project
+set_property -name "ip_output_repo" -value "$ip_dir" -objects $project
 set_property -name "mem.enable_memory_map_generation" -value "1" -objects $project
 set_property -name "part" -value "xc7a35tcpg236-1" -objects $project
-set_property -name "sim.central_dir" -value "$root_dir/sim/vivado" -objects $project
+set_property -name "sim.central_dir" -value "$sim_dir/vivado/testcore" -objects $project
 set_property -name "sim.ip.auto_export_scripts" -value "1" -objects $project
 set_property -name "simulator_language" -value "Mixed" -objects $project
 set_property -name "source_mgmt_mode" -value "DisplayOnly" -objects $project
@@ -39,12 +39,12 @@ if {[llength $v_files] != 0} {set_property -name "file_type" -value "SystemVeril
 
 set_property -name "top" -value "testcore" -objects [get_filesets sources_1]
 
-file mkdir $root_dir/ip
-create_ip -vlnv {xilinx.com:ip:vio:3.0} -module vio -dir $root_dir/ip/
+file mkdir $ip_dir
+create_ip -vlnv {xilinx.com:ip:vio:3.0} -module vio -dir $ip_dir
 set_property -dict [list \
 	CONFIG.C_EN_PROBE_IN_ACTIVITY {0} \
 	CONFIG.C_NUM_PROBE_IN {0} \
 	] [get_ips vio]
-generate_target {instantiation_template} [get_files $root_dir/ip/vio/vio.xci]
+generate_target {instantiation_template} [get_files $ip_dir/vio/vio.xci]
 
 exit
