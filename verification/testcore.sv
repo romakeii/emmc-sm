@@ -70,8 +70,11 @@ module testcore #(
 			ila ila_inst (
 				.clk(clk_core),
 				.probe0({
-					emmc_sm_inst.fsm_dat_not_busy,
-					emmc_sm_inst.dath_crc_ok
+					emmc_sm_inst.orig_state,
+					emmc_sm_inst.curr_state,
+					emmc_sm_inst.next_state,
+					host_wr_dat,
+					host_rd_dat
 				})
 			);
 
