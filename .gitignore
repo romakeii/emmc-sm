@@ -16,6 +16,8 @@
 !src/inc/*.*vh
 !src/sd_mmc_emulator/
 !src/sd_mmc_emulator/*.vhd
+!constraints/
+!constraints/*.xdc
 !auxiliary/
 !auxiliary/*.tcl
 !verification/
