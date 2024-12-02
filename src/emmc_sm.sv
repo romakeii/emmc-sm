@@ -72,11 +72,6 @@ module emmc_sm #(
 	} cmd_int_status_t;
 	cmd_int_status_t cmdh_int_status;
 
-	typedef struct packed {
-		logic [3 : 0] cmd_state;
-		logic [3 : 0] serial_state;
-	} dbg_states_t; dbg_states_t dbg_states;
-	logic [15 : 0] dbg_general;
 	assign sd_clk = clk_i;
 
 	logic dath_busy;
@@ -99,7 +94,6 @@ module emmc_sm #(
 		.sd_cmd_oe_o(emmc_cmd_oe_o)
 	);
 
-	logic [3 : 0] ddbg_states;
 	logic dath_tx_dat_rd;
 	logic dath_rx_dat_we;
 	logic dath_stop;
@@ -107,7 +101,6 @@ module emmc_sm #(
 	logic dath_write;
 	logic dath_fsm_busy;
 	logic dath_crc_ok;
-	logic [15 : 0] ddbg_general;
 	logic [1 : 0] dath_bus_size;
 	logic [jedec_p::BLK_CNT_WIDTH - 1 : 0] dath_blk_cnt;
 	logic [11 : 0] blksize;
