@@ -1,13 +1,13 @@
 `include "jedec.svh"
 
-module testcore (
+module testcore #(
+	parameter int unsigned ___SIMULATION___ = 0
+) (
 	input logic clk_i,
 	output logic nrst_o,
 	inout logic cmd_io,
 	inout logic [jedec_p::DAT_WIDTH - 1 : 0] dat_io,
 	output logic clk_pad_o
-) (
-	parameter int unsigned ___SIMULATION___ = 0
 );
 
 	logic clk_divided;
@@ -67,14 +67,12 @@ module testcore (
 
 		if(~___SIMULATION___) begin
 
-			ila_0 ila_inst (
+			ila ila_inst (
 				.clk(clk_core),
 				.probe0({
 					emmc_sm_inst.fsm_dat_not_busy,
 					emmc_sm_inst.dath_crc_ok
-				}),
-				.probe1(emmc_sm_inst.curr_state),
-				.probe2(emmc_sm_inst.orig_state)
+				})
 			);
 
 			logic system_start;
@@ -82,7 +80,7 @@ module testcore (
 				.clk(clk_i),
 				.probe_out0(system_start)
 			);
-			assign rst_manual = ~system_start
+			assign rst_manual = ~system_start;
 
 		end
 

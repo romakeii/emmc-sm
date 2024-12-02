@@ -9,7 +9,13 @@ source "$auxiliary_dir/find_files.tcl"
 
 set proj_name "testcore"
 
-set v_files   [list {*}[find_files $src_dir *.v] {*}[find_files $src_dir *.sv] {*}[find_files $hwdbg_dir *.v] {*}[find_files $hwdbg_dir *.sv]]
+set v_files   [list \
+	{*}[find_files $src_dir *.v] \
+	{*}[find_files $src_dir *.sv] \
+	{*}[find_files $hwdbg_dir *.v] \
+	{*}[find_files $hwdbg_dir *.sv]\
+	{*}[find_files $verification_dir *.v] \
+	{*}[find_files $verification_dir *.sv] ]
 set vh_files  [list {*}[find_files $src_dir *.vh] {*}[find_files $src_dir *.svh] {*}[find_files $hwdbg_dir *.vh] {*}[find_files $hwdbg_dir *.svh]]
 set vhd_files [find_files $src_dir *.vhd]
 set xdc_files [find_files $constraints_dir *.xdc]
@@ -46,5 +52,14 @@ set_property -dict [list \
 	CONFIG.C_NUM_PROBE_IN {0} \
 	] [get_ips vio]
 generate_target {instantiation_template} [get_files $ip_dir/vio/vio.xci]
+
+create_ip -vlnv {xilinx.com:ip:ila:6.2} -module ila -dir $ip_dir
+set_property -dict [list \
+	CONFIG.C_PROBE0_WIDTH {512} \
+	CONFIG.C_DATA_DEPTH {2048} \
+	CONFIG.C_PROBE0_MU_CNT {2} \
+	CONFIG.ALL_PROBE_SAME_MU_CNT {2} \
+	] [get_ips ila]
+generate_target {instantiation_template} [get_files $ip_dir/ila/ila.xci]
 
 exit
