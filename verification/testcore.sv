@@ -38,16 +38,23 @@ module testcore #(
 	logic host_dvalid;
 	logic host_ready;
 
+	assign host_start = 0;
+	always_ff @(posedge clk_core or posedge rst_manual) begin
+		if(rst_manual) host_wr_dat <= 'h5555;
+		else if(host_ready) host_wr_dat <= ~host_wr_dat;
+	end
+
+
 	emmc_sm emmc_sm_inst (
 		.clk_i(clk_core),
 		.arst_i(rst_manual),
 
 		.emmc_cmd_i(cmd_io),
-		.emmc_cmd_o(host_dat),
+		.emmc_cmd_o(host_cmd),
 		.emmc_cmd_oe_o(host_cmd_oe),
 
 		.emmc_dat_i(dat_io),
-		.emmc_dat_o(host_cmd),
+		.emmc_dat_o(host_dat),
 		.emmc_dat_oe_o(host_dat_oe),
 
 		.sel_clk_o(sel_clk),
@@ -73,8 +80,11 @@ module testcore #(
 					emmc_sm_inst.orig_state,
 					emmc_sm_inst.curr_state,
 					emmc_sm_inst.next_state,
-					host_wr_dat,
-					host_rd_dat
+					emmc_sm_inst.cmdh_response_0,
+					dat_io,
+					emmc_sm_inst.fsm_dat_not_busy,
+					emmc_sm_inst.dath_crc_ok,
+					emmc_sm_inst.dath_fsm_busy
 				})
 			);
 
