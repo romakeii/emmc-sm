@@ -33,17 +33,21 @@ module testcore #(
 
 	logic host_we;
 	logic host_start;
-	logic host_wr_dat;
-	logic host_rd_dat;
+	logic [7 : 0] host_wr_dat;
+	logic [7 : 0] host_rd_dat;
 	logic host_dvalid;
 	logic host_ready;
 
-	assign host_start = 0;
+	assign host_start = 1;
 	always_ff @(posedge clk_core or posedge rst_manual) begin
-		if(rst_manual) host_wr_dat <= 'h5555;
-		else if(host_ready) host_wr_dat <= ~host_wr_dat;
+		if(rst_manual) begin
+			host_wr_dat <= 0;
+			host_we <= 1;
+		end else if(host_ready) begin
+			host_wr_dat <= host_wr_dat + 1;
+			host_we <= ~host_we;
+		end
 	end
-
 
 	emmc_sm emmc_sm_inst (
 		.clk_i(clk_core),
@@ -59,7 +63,7 @@ module testcore #(
 
 		.sel_clk_o(sel_clk),
 
-		.blk_cnt_i(2),
+		.blk_cnt_i(1),
 		.we_i(host_we),
 		.start_i(host_start),
 		.dat_i(host_wr_dat),
@@ -77,14 +81,16 @@ module testcore #(
 			ila ila_inst (
 				.clk(clk_core),
 				.probe0({
+					emmc_sm_inst.we_i,
+					emmc_sm_inst.start_i,
+					emmc_sm_inst.dat_i,
+					emmc_sm_inst.dat_o,
+					emmc_sm_inst.dvalid_o,
+					emmc_sm_inst.ready_o,
 					emmc_sm_inst.orig_state,
 					emmc_sm_inst.curr_state,
 					emmc_sm_inst.next_state,
-					emmc_sm_inst.cmdh_response_0,
-					dat_io,
-					emmc_sm_inst.fsm_dat_not_busy,
-					emmc_sm_inst.dath_crc_ok,
-					emmc_sm_inst.dath_fsm_busy
+					dat_io
 				})
 			);
 
