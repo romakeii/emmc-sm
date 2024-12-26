@@ -7,7 +7,7 @@ cd $script_dir
 
 source "$auxiliary_dir/find_files.tcl"
 
-set proj_name "testcore"
+set proj_name "emmc_testcore"
 
 set v_files   [list \
 	{*}[find_files $src_dir *.v] \
@@ -21,7 +21,7 @@ set vhd_files [find_files $src_dir *.vhd]
 set xdc_files [find_files $constraints_dir *.xdc]
 set src_files [list {*}$v_files {*}$vh_files {*}$vhd_files]
 
-create_project $proj_name $hwdbg_dir/testcore -part xc7a35tcpg236-1 -force
+create_project $proj_name $hwdbg_dir/emmc_testcore -part xc7a35tcpg236-1 -force
 
 set project [current_project]
 set_property -name "default_lib" -value "xil_defaultlib" -objects $project
@@ -30,7 +30,7 @@ set_property -name "ip_cache_permissions" -value "read write" -objects $project
 set_property -name "ip_output_repo" -value "$ip_dir" -objects $project
 set_property -name "mem.enable_memory_map_generation" -value "1" -objects $project
 set_property -name "part" -value "xc7a35tcpg236-1" -objects $project
-set_property -name "sim.central_dir" -value "$sim_dir/vivado/testcore" -objects $project
+set_property -name "sim.central_dir" -value "$sim_dir/vivado/emmc_testcore" -objects $project
 set_property -name "sim.ip.auto_export_scripts" -value "1" -objects $project
 set_property -name "simulator_language" -value "Mixed" -objects $project
 set_property -name "source_mgmt_mode" -value "DisplayOnly" -objects $project
@@ -43,7 +43,7 @@ if {[llength $vhd_files] != 0} {set_property -name "file_type" -value "VHDL 2008
 if {[llength $vh_files] != 0} {set_property -name "file_type" -value "Verilog Header" -objects [get_files -of_objects [get_filesets sources_1] *.*vh]}
 if {[llength $v_files] != 0} {set_property -name "file_type" -value "SystemVerilog" -objects [get_files -of_objects [get_filesets sources_1] *.sv]}
 
-set_property -name "top" -value "testcore" -objects [get_filesets sources_1]
+set_property -name "top" -value "emmc_testcore" -objects [get_filesets sources_1]
 
 file mkdir $ip_dir
 create_ip -vlnv {xilinx.com:ip:vio:3.0} -module vio -dir $ip_dir

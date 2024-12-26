@@ -1,9 +1,10 @@
 `include "jedec.svh"
 
-module testcore #(
+module emmc_testcore #(
 	parameter int unsigned ___SIMULATION___ = 0
 ) (
 	input logic clk_i,
+	input logic arst_i,
 	output logic nrst_o,
 	inout logic cmd_io,
 	inout logic [jedec_p::DAT_WIDTH - 1 : 0] dat_io,
@@ -21,7 +22,7 @@ module testcore #(
 	logic clk_core;
 	assign clk_core = sel_clk ? clk_i : clk_divided;
 
-	logic rst_manual;
+	logic rst_tk;
 
 	logic host_cmd;
 	logic host_cmd_oe;
@@ -39,8 +40,8 @@ module testcore #(
 	logic host_ready;
 
 	assign host_start = 1;
-	always_ff @(posedge clk_core or posedge rst_manual) begin
-		if(rst_manual) begin
+	always_ff @(posedge clk_core or posedge rst_tk) begin
+		if(rst_tk) begin
 			host_wr_dat <= 0;
 			host_we <= 1;
 		end else begin
@@ -52,7 +53,7 @@ module testcore #(
 
 	emmc_sm emmc_sm_inst (
 		.clk_i(clk_core),
-		.arst_i(rst_manual),
+		.arst_i(rst_tk),
 
 		.emmc_cmd_i(cmd_io),
 		.emmc_cmd_o(host_cmd),
@@ -102,8 +103,10 @@ module testcore #(
 				.clk(clk_i),
 				.probe_out0(system_start)
 			);
-			assign rst_manual = ~system_start;
+			assign rst_tk = ~system_start;
 
+		end else begin
+			assign rst_tk = arst_i;
 		end
 
 	endgenerate
