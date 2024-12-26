@@ -79,7 +79,9 @@ constant INT_DATA_SIZE  : integer := 3; -- Size of register field, in bits
     bustest_res_o : out unsigned(2 downto 0);
     sd_dat_busy_o : out std_logic;
     fsm_busy_o    : out std_logic;
-    crc_ok_o      : out std_logic
+    crc_ok_o      : out std_logic;
+
+    dbg : out std_logic_vector(63 downto 0)
   );
   end component;
 
@@ -231,7 +233,8 @@ begin
     cmd_state   <= IDLE;
     cmd_buff    <= (others=>'0');
   elsif (sd_clk'event and sd_clk='1') then
-    watchdog <= watchdog+1;
+    -- watchdog <= watchdog+1;
+    watchdog <= watchdog;
     case (cmd_state) is
       when IDLE =>
         -- Only CMD2, CMD9 and CMD10 have long responses...
@@ -583,7 +586,9 @@ entity sd_data_8bit_host is
     bustest_res_o : out unsigned(2 downto 0);
     sd_dat_busy_o : out std_logic;
     fsm_busy_o    : out std_logic;
-    crc_ok_o      : out std_logic
+    crc_ok_o      : out std_logic;
+
+    dbg : out std_logic_vector(63 downto 0)
   );
 end sd_data_8bit_host;
 
@@ -624,6 +629,9 @@ signal bustest_1  : unsigned(7 downto 0);
 signal bustest_x  : unsigned(7 downto 0);
 
 begin
+
+dbg(31 downto 0) <= std_logic_vector(to_unsigned(FSM_STATE_TYPE'POS(state), 32));
+dbg(32) <= start_bit;
 
 --sd data input pad register
 process(sd_clk)
