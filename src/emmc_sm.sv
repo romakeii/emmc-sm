@@ -121,7 +121,6 @@ module emmc_sm #(
 	logic [11 : 0] blksize;
 	assign blksize = 512;
 
-	logic [31 : 0] dbg;
 	sd_data_8bit_host sd_data_8bit_host_inst (
 		.sd_clk(sd_clk),
 		.sys_rst(arst_i),
@@ -144,8 +143,7 @@ module emmc_sm #(
 		.bustest_res_o(),
 		.sd_dat_busy_o(dath_busy),
 		.fsm_busy_o(dath_fsm_busy),
-		.crc_ok_o(dath_crc_ok),
-		.dbg(dbg)
+		.crc_ok_o(dath_crc_ok)
 	);
 
 	logic [$clog2(8192) - 1 : 0] mp_cntr;
