@@ -44,16 +44,31 @@ module emmc_sm #(
 
 );
 
-	jedec_p::cid_t cid;
-	jedec_p::csd_t csd;
-	jedec_p::ext_csd_t ext_csd;
-
 	localparam logic [31 : 0] CARD_ADDR_ARG = 32'h40000;
 
 	logic [31 : 0] cmdh_response_0;
 	logic [31 : 0] cmdh_response_1;
 	logic [31 : 0] cmdh_response_2;
 	logic [31 : 0] cmdh_response_3;
+
+	jedec_p::cid_t cid;
+	jedec_p::csd_t csd;
+	logic [31 : 0] card_status; // TODO: replace with a structure defined in jedec_p
+
+	logic cid_wr_enbl;
+	logic csd_wr_enbl;
+	logic card_status_wr_enbl;
+	logic [2 : 0] response_wr_enbl;
+
+	always_ff @(posedge clk_i or posedge arst_i) begin
+		if(arst_i) begin
+			{cid, csd, card_status} <= '0;
+		end else begin
+			if(cid_wr_enbl)         cid <= {cmdh_response_0, cmdh_response_1, cmdh_response_2, cmdh_response_3};
+			if(csd_wr_enbl)         csd <= {cmdh_response_0, cmdh_response_1, cmdh_response_2, cmdh_response_3};
+			if(card_status_wr_enbl) card_status <= cmdh_response_0;
+		end
+	end
 
 	logic sd_clk;
 	logic cmdh_start;
@@ -176,6 +191,7 @@ module emmc_sm #(
 	end
 
 	always_comb begin
+		{cid_wr_enbl, csd_wr_enbl, card_status_wr_enbl} = '0;
 		next_state = emmc_sm_p::INIT_START;
 		state_change_enbl = '0;
 		orig_state_pend = curr_state;
@@ -202,6 +218,7 @@ module emmc_sm #(
 					end
 					emmc_sm_p::INIT_IDENT: begin
 						jedec_p::cid_t cid;
+						cid_wr_enbl = 1;
 						cid = {cmdh_response_0, cmdh_response_1, cmdh_response_2, cmdh_response_3};
 						if(___SIMULATION___) begin
 							next_state = emmc_sm_p::INIT_STBY;
@@ -236,11 +253,13 @@ module emmc_sm #(
 						// it would be a situation when host isn't ready for data receive
 						// Here we are getting the host ready to receive a data preemptively
 						dath_read = state_changed;
+						if(orig_state != emmc_sm_p::INIT_GET_CSD_EXT) card_status_wr_enbl = 1;
 					end
 					emmc_sm_p::DO_SBLK_WRITE,
 					emmc_sm_p::DO_MBLK_WRITE: begin
 						next_state = emmc_sm_p::WAIT_DAT;
 						orig_state_pend = orig_state;
+						card_status_wr_enbl = 1;
 					end
 					emmc_sm_p::DO_STOP_TRANSACT: begin
 						next_state = emmc_sm_p::DO_IDLE;
@@ -367,20 +386,22 @@ module emmc_sm #(
 	assign dvalid_o = dath_tx_dat_rd | dath_rx_dat_we;
 	assign ready_o = curr_state == emmc_sm_p::DO_IDLE;
 
-	logic [$bits(ext_csd) - 1 : 0] ext_csd_buf;
-	always_ff @(posedge clk_i or posedge arst_i) begin
-		if(arst_i) begin
-			{cid, csd, ext_csd} <= '0;
-		end else begin
-			if(state_change_enbl == 1) begin
-				if(orig_state == emmc_sm_p::INIT_IDENT)   cid <= cmdh_response_0;
-				if(orig_state == emmc_sm_p::INIT_GET_CSD) csd <= cmdh_response_0;
-			end
-			if(orig_state == emmc_sm_p::INIT_GET_CSD_EXT) begin
-				if(dvalid_o) ext_csd_buf <= {dat_o, ext_csd_buf[$bits(ext_csd) - $bits(dat_o) - 1 : 0]};
-			end
-		end
-	end
+	// logic [$bits(ext_csd) - 1 : 0] ext_csd_buf;
+	// always_ff @(posedge clk_i or posedge arst_i) begin
+	// 	if(arst_i) begin
+	// 		{cid, csd, ext_csd} <= '0;
+	// 	end else begin
+	// 		if(state_change_enbl == 1) begin
+	// 			if(curr_state == emmc_sm_p::WAIT_CMD) begin
+	// 				if(orig_state == emmc_sm_p::INIT_IDENT)   cid <= cmdh_response_0;
+	// 				if(orig_state == emmc_sm_p::INIT_GET_CSD) csd <= cmdh_response_0;
+	// 			end
+	// 		end
+	// 		if(orig_state == emmc_sm_p::INIT_GET_CSD_EXT) begin
+	// 			if(dvalid_o) ext_csd_buf <= {dat_o, ext_csd_buf[$bits(ext_csd) - $bits(dat_o) - 1 : 0]};
+	// 		end
+	// 	end
+	// end
 
 	always_ff @(posedge clk_i) begin
 		if(curr_state == emmc_sm_p::INIT_GET_CSD_EXT) dath_blk_cnt <= 1;

@@ -43,10 +43,11 @@ module testcore #(
 		if(rst_manual) begin
 			host_wr_dat <= 0;
 			host_we <= 1;
-		end else if(host_ready) begin
-			host_wr_dat <= host_wr_dat + 1;
-			host_we <= ~host_we;
+		end else begin
+			if(host_dvalid) host_wr_dat <= host_wr_dat + 1;
+			if(host_ready)  host_we <= ~host_we;
 		end
+
 	end
 
 	emmc_sm emmc_sm_inst (
@@ -90,7 +91,9 @@ module testcore #(
 					emmc_sm_inst.orig_state,
 					emmc_sm_inst.curr_state,
 					emmc_sm_inst.next_state,
-					dat_io
+					cmd_io,
+					dat_io,
+					emmc_sm_inst.card_status
 				})
 			);
 
