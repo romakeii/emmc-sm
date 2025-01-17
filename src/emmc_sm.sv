@@ -53,20 +53,23 @@ module emmc_sm #(
 
 	jedec_p::cid_t cid;
 	jedec_p::csd_t csd;
+	jedec_p::ext_csd_t ext_csd;
+	logic [$bits(ext_csd) - 1 : 0] ext_csd_stream;
 	logic [31 : 0] card_status; // TODO: replace with a structure defined in jedec_p
 
-	logic cid_wr_enbl;
-	logic csd_wr_enbl;
-	logic card_status_wr_enbl;
-	logic [2 : 0] response_wr_enbl;
+	enum int unsigned { CID, CSD, CARD_STATUS, EXT_CSD } regs;
+	logic [regs.num() - 1 : 0] wr_enbl_of_reg;
 
+	logic [7 : 0] dat_rev_order;
+	assign dat_rev_order = {<< {dat_o}};
 	always_ff @(posedge clk_i or posedge arst_i) begin
 		if(arst_i) begin
-			{cid, csd, card_status} <= '0;
+			{cid, csd, card_status, ext_csd_stream} <= '0;
 		end else begin
-			if(cid_wr_enbl)         cid <= {cmdh_response_0, cmdh_response_1, cmdh_response_2, cmdh_response_3};
-			if(csd_wr_enbl)         csd <= {cmdh_response_0, cmdh_response_1, cmdh_response_2, cmdh_response_3};
-			if(card_status_wr_enbl) card_status <= cmdh_response_0;
+			if(wr_enbl_of_reg[CID])         cid <= {cmdh_response_0, cmdh_response_1, cmdh_response_2, cmdh_response_3};
+			if(wr_enbl_of_reg[CSD])         csd <= {cmdh_response_0, cmdh_response_1, cmdh_response_2, cmdh_response_3};
+			if(wr_enbl_of_reg[CARD_STATUS]) card_status <= cmdh_response_0;
+			if(wr_enbl_of_reg[EXT_CSD])     ext_csd <= {dat_rev_order, ext_csd[$bits(ext_csd_stream) - 1 : 8]};
 		end
 	end
 
@@ -146,7 +149,7 @@ module emmc_sm #(
 		.crc_ok_o(dath_crc_ok)
 	);
 
-	logic [$clog2(8192) - 1 : 0] mp_cntr;
+	logic [$clog2(8192) : 0] mp_cntr;
 	logic mp_cntr_rst;
 	logic mp_cntr_enbl;
 	always_ff @(posedge clk_i or posedge arst_i) begin
@@ -189,7 +192,7 @@ module emmc_sm #(
 	end
 
 	always_comb begin
-		{cid_wr_enbl, csd_wr_enbl, card_status_wr_enbl} = '0;
+		wr_enbl_of_reg = '0;
 		next_state = emmc_sm_p::INIT_START;
 		state_change_enbl = '0;
 		orig_state_pend = curr_state;
@@ -216,7 +219,7 @@ module emmc_sm #(
 					end
 					emmc_sm_p::INIT_IDENT: begin
 						jedec_p::cid_t cid;
-						cid_wr_enbl = 1;
+						wr_enbl_of_reg[CID] = 1;
 						cid = {cmdh_response_0, cmdh_response_1, cmdh_response_2, cmdh_response_3};
 						if(___SIMULATION___) begin
 							next_state = emmc_sm_p::INIT_STBY;
@@ -230,6 +233,7 @@ module emmc_sm #(
 					end
 					emmc_sm_p::INIT_GET_CSD: begin
 						next_state = emmc_sm_p::INIT_TRAN;
+						wr_enbl_of_reg[CSD] = 1;
 					end
 					emmc_sm_p::INIT_TRAN: begin
 						next_state = emmc_sm_p::INIT_GET_CSD_EXT;
@@ -251,13 +255,13 @@ module emmc_sm #(
 						// it would be a situation when host isn't ready for data receive
 						// Here we are getting the host ready to receive a data preemptively
 						dath_read = state_changed;
-						if(orig_state != emmc_sm_p::INIT_GET_CSD_EXT) card_status_wr_enbl = 1;
+						if(orig_state != emmc_sm_p::INIT_GET_CSD_EXT) wr_enbl_of_reg[CARD_STATUS] = 1;
 					end
 					emmc_sm_p::DO_SBLK_WRITE,
 					emmc_sm_p::DO_MBLK_WRITE: begin
 						next_state = emmc_sm_p::WAIT_DAT;
 						orig_state_pend = orig_state;
-						card_status_wr_enbl = 1;
+						wr_enbl_of_reg[CARD_STATUS] = 1;
 					end
 					emmc_sm_p::DO_STOP_TRANSACT: begin
 						next_state = emmc_sm_p::DO_IDLE;
@@ -271,7 +275,9 @@ module emmc_sm #(
 				state_change_enbl = fsm_dat_not_busy & dath_crc_ok;
 				case(orig_state)
 					emmc_sm_p::INIT_GET_CSD_EXT: begin
+						wr_enbl_of_reg[EXT_CSD] = dvalid_o;
 						next_state = emmc_sm_p::INIT_GO_FAST;
+						mp_cntr_use(1);
 					end
 					emmc_sm_p::DO_SBLK_WRITE: begin
 						next_state = emmc_sm_p::DO_IDLE;
@@ -383,23 +389,6 @@ module emmc_sm #(
 
 	assign dvalid_o = dath_tx_dat_rd | dath_rx_dat_we;
 	assign ready_o = curr_state == emmc_sm_p::DO_IDLE;
-
-	// logic [$bits(ext_csd) - 1 : 0] ext_csd_buf;
-	// always_ff @(posedge clk_i or posedge arst_i) begin
-	// 	if(arst_i) begin
-	// 		{cid, csd, ext_csd} <= '0;
-	// 	end else begin
-	// 		if(state_change_enbl == 1) begin
-	// 			if(curr_state == emmc_sm_p::WAIT_CMD) begin
-	// 				if(orig_state == emmc_sm_p::INIT_IDENT)   cid <= cmdh_response_0;
-	// 				if(orig_state == emmc_sm_p::INIT_GET_CSD) csd <= cmdh_response_0;
-	// 			end
-	// 		end
-	// 		if(orig_state == emmc_sm_p::INIT_GET_CSD_EXT) begin
-	// 			if(dvalid_o) ext_csd_buf <= {dat_o, ext_csd_buf[$bits(ext_csd) - $bits(dat_o) - 1 : 0]};
-	// 		end
-	// 	end
-	// end
 
 	always_ff @(posedge clk_i) begin
 		if(curr_state == emmc_sm_p::INIT_GET_CSD_EXT) dath_blk_cnt <= 1;

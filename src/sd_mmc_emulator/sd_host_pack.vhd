@@ -231,8 +231,8 @@ begin
     cmd_state   <= IDLE;
     cmd_buff    <= (others=>'0');
   elsif (sd_clk'event and sd_clk='1') then
-    -- watchdog <= watchdog+1;
-    watchdog <= watchdog;
+    watchdog <= watchdog+1;
+    -- watchdog <= watchdog;
     case (cmd_state) is
       when IDLE =>
         -- Only CMD2, CMD9 and CMD10 have long responses...
