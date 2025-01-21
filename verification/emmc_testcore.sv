@@ -80,22 +80,24 @@ module emmc_testcore #(
 
 		if(~___SIMULATION___) begin
 
+			logic [511 : 0] ila_blob;
+			assign ila_blob = {
+				emmc_sm_inst.we_i,
+				emmc_sm_inst.start_i,
+				emmc_sm_inst.dat_i,
+				emmc_sm_inst.dat_o,
+				emmc_sm_inst.dvalid_o,
+				emmc_sm_inst.ready_o,
+				emmc_sm_inst.orig_state,
+				emmc_sm_inst.curr_state,
+				emmc_sm_inst.next_state,
+				cmd_io,
+				dat_io,
+				emmc_sm_inst.card_status
+			};
 			ila ila_inst (
 				.clk(clk_core),
-				.probe0({
-					emmc_sm_inst.we_i,
-					emmc_sm_inst.start_i,
-					emmc_sm_inst.dat_i,
-					emmc_sm_inst.dat_o,
-					emmc_sm_inst.dvalid_o,
-					emmc_sm_inst.ready_o,
-					emmc_sm_inst.orig_state,
-					emmc_sm_inst.curr_state,
-					emmc_sm_inst.next_state,
-					cmd_io,
-					dat_io,
-					emmc_sm_inst.card_status
-				})
+				.probe0(ila_blob)
 			);
 
 			logic system_start;

@@ -5,10 +5,12 @@ source $script_dir/../../auxiliary/set_dirs.tcl
 
 cd $script_dir
 
-source "$auxiliary_dir/find_files.tcl"
-
 set proj_name "emmc_testcore"
 
+file delete -force "./.Xil/"
+file delete -force $proj_name
+
+source "$auxiliary_dir/find_files.tcl"
 set v_files   [list \
 	{*}[find_files $src_dir *.v] \
 	{*}[find_files $src_dir *.sv] \
@@ -44,6 +46,8 @@ if {[llength $vh_files] != 0} {set_property -name "file_type" -value "Verilog He
 if {[llength $v_files] != 0} {set_property -name "file_type" -value "SystemVerilog" -objects [get_files -of_objects [get_filesets sources_1] *.sv]}
 
 set_property -name "top" -value "emmc_testcore" -objects [get_filesets sources_1]
+
+file delete -force $ip_dir
 
 file mkdir $ip_dir
 create_ip -vlnv {xilinx.com:ip:vio:3.0} -module vio -dir $ip_dir
