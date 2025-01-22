@@ -91,6 +91,7 @@ module emmc_testcore #(
 				emmc_sm_inst.orig_state,
 				emmc_sm_inst.curr_state,
 				emmc_sm_inst.next_state,
+				emmc_sm_inst.state_change_enbl,
 				cmd_io,
 				dat_io,
 				emmc_sm_inst.card_status

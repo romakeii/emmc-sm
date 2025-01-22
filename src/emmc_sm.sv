@@ -230,6 +230,7 @@ module emmc_sm #(
 					end
 					emmc_sm_p::INIT_STBY: begin
 						next_state = emmc_sm_p::INIT_GET_CSD;
+						wr_enbl_of_reg[CARD_STATUS] = state_change_enbl;
 					end
 					emmc_sm_p::INIT_GET_CSD: begin
 						next_state = emmc_sm_p::INIT_TRAN;
@@ -237,12 +238,14 @@ module emmc_sm #(
 					end
 					emmc_sm_p::INIT_TRAN: begin
 						next_state = emmc_sm_p::INIT_GET_CSD_EXT;
+						wr_enbl_of_reg[CARD_STATUS] = state_change_enbl;
 					end
 					// wait for cmd to wait for busy
 					emmc_sm_p::INIT_GO_FAST,
 					emmc_sm_p::INIT_SET_DWIDTH: begin
 						next_state = emmc_sm_p::WAIT_BUSY;
 						orig_state_pend = orig_state;
+						wr_enbl_of_reg[CARD_STATUS] = state_change_enbl;
 					end
 					// wait for cmd to wait for dat
 					emmc_sm_p::INIT_GET_CSD_EXT,
@@ -255,16 +258,17 @@ module emmc_sm #(
 						// it would be a situation when host isn't ready for data receive
 						// Here we are getting the host ready to receive a data preemptively
 						dath_read = state_changed;
-						if(orig_state != emmc_sm_p::INIT_GET_CSD_EXT) wr_enbl_of_reg[CARD_STATUS] = 1;
+						wr_enbl_of_reg[CARD_STATUS] = state_change_enbl;
 					end
 					emmc_sm_p::DO_SBLK_WRITE,
 					emmc_sm_p::DO_MBLK_WRITE: begin
 						next_state = emmc_sm_p::WAIT_DAT;
 						orig_state_pend = orig_state;
-						wr_enbl_of_reg[CARD_STATUS] = 1;
+						wr_enbl_of_reg[CARD_STATUS] = state_change_enbl;
 					end
 					emmc_sm_p::DO_STOP_TRANSACT: begin
 						next_state = emmc_sm_p::DO_IDLE;
+						wr_enbl_of_reg[CARD_STATUS] = state_change_enbl;
 					end
 					default: begin
 						next_state = emmc_sm_p::ERR;
@@ -277,7 +281,6 @@ module emmc_sm #(
 					emmc_sm_p::INIT_GET_CSD_EXT: begin
 						wr_enbl_of_reg[EXT_CSD] = dvalid_o;
 						next_state = emmc_sm_p::INIT_GO_FAST;
-						mp_cntr_use(1);
 					end
 					emmc_sm_p::DO_SBLK_WRITE: begin
 						next_state = emmc_sm_p::DO_IDLE;
