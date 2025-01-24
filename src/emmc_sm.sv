@@ -36,6 +36,7 @@ module emmc_sm #(
 	// Interface
 	input logic we_i,
 	input logic start_i,
+	input logic [15 : 0] blk_idx_i,
 	input logic [jedec_p::BLK_CNT_WIDTH - 1 : 0] blk_cnt_i,
 	input logic [7 : 0] dat_i,
 	output logic [7 : 0] dat_o,
@@ -92,8 +93,14 @@ module emmc_sm #(
 
 	assign sd_clk = clk_i;
 
+	logic [7 : 0] serial_st;
+	logic [7 : 0] cmd_st;
+
 	logic dath_busy;
 	sd_cmd_host sd_cmd_host_inst (
+		.serial_st_o(serial_st),
+		.cmd_st_o(cmd_st),
+
 		.sys_rst(arst_i),
 		.sd_clk(sd_clk),
 		.start_i(cmdh_start),
@@ -173,11 +180,12 @@ module emmc_sm #(
 	assign cmdh_int_rst = state_change_enbl;
 
 	logic dath_busy_d1;
+	logic dath_busy_d2;
 	logic dath_fsm_busy_d1;
-	always @(posedge clk_i) {dath_busy_d1, dath_fsm_busy_d1} <= {dath_busy, dath_fsm_busy};
+	always @(posedge clk_i) {dath_busy_d1, dath_busy_d2, dath_fsm_busy_d1} <= {dath_busy, dath_busy_d1, dath_fsm_busy};
 	logic card_not_busy_pulse;
 	logic fsm_dat_not_busy;
-	assign {card_not_busy_pulse, fsm_dat_not_busy} = {~dath_busy & dath_busy_d1, ~dath_fsm_busy & dath_fsm_busy_d1};
+	assign {card_not_busy_pulse, fsm_dat_not_busy} = {~dath_busy_d1 & dath_busy_d2, ~dath_fsm_busy & dath_fsm_busy_d1};
 
 	logic sel_clk_o_pend;
 	logic [1 : 0] bus_size_pend;
@@ -190,6 +198,11 @@ module emmc_sm #(
 			if(enbl_bus_size_change) dath_bus_size <= bus_size_pend;
 		end
 	end
+
+	logic [31 : 0] rdwr_addr;
+	logic [$bits(rdwr_addr) - 1 : 0] rdwr_addr_pend;
+	assign rdwr_addr_pend = 512 << blk_idx_i;
+	always_ff @(posedge clk_i) if(curr_state == emmc_sm_p::DO_IDLE) rdwr_addr <= rdwr_addr_pend;
 
 	always_comb begin
 		wr_enbl_of_reg = '0;
@@ -255,7 +268,7 @@ module emmc_sm #(
 						// it would be a situation when host isn't ready for data receive
 						// Here we are getting the host ready to receive a data preemptively
 						dath_read = state_changed;
-						if(orig_state != emmc_sm_p::INIT_GET_CSD_EXT) wr_enbl_of_reg[CARD_STATUS] = 1;
+						wr_enbl_of_reg[CARD_STATUS] = 1;
 					end
 					emmc_sm_p::DO_SBLK_WRITE,
 					emmc_sm_p::DO_MBLK_WRITE: begin
@@ -263,7 +276,11 @@ module emmc_sm #(
 						orig_state_pend = orig_state;
 						wr_enbl_of_reg[CARD_STATUS] = 1;
 					end
-					emmc_sm_p::DO_STOP_TRANSACT: begin
+					emmc_sm_p::DO_STOP_WRITE_TRANSACT: begin
+						next_state = emmc_sm_p::WAIT_BUSY;
+						orig_state_pend = orig_state;
+					end
+					emmc_sm_p::DO_STOP_READ_TRANSACT: begin
 						next_state = emmc_sm_p::DO_IDLE;
 					end
 					default: begin
@@ -277,14 +294,13 @@ module emmc_sm #(
 					emmc_sm_p::INIT_GET_CSD_EXT: begin
 						wr_enbl_of_reg[EXT_CSD] = dvalid_o;
 						next_state = emmc_sm_p::INIT_GO_FAST;
-						mp_cntr_use(1);
 					end
 					emmc_sm_p::DO_SBLK_WRITE: begin
 						next_state = emmc_sm_p::DO_IDLE;
 						dath_write = state_changed;
 					end
 					emmc_sm_p::DO_MBLK_WRITE: begin
-						next_state = emmc_sm_p::DO_STOP_TRANSACT;
+						next_state = emmc_sm_p::DO_STOP_WRITE_TRANSACT;
 						dath_write = state_changed;
 					end
 					emmc_sm_p::DO_SBLK_READ: begin
@@ -292,7 +308,7 @@ module emmc_sm #(
 						dath_read = state_changed;
 					end
 					emmc_sm_p::DO_MBLK_READ: begin
-						next_state = emmc_sm_p::DO_STOP_TRANSACT;
+						next_state = emmc_sm_p::DO_STOP_READ_TRANSACT;
 						dath_read = state_changed;
 					end
 					default: begin
@@ -312,6 +328,9 @@ module emmc_sm #(
 						next_state = emmc_sm_p::DO_IDLE;
 						bus_size_pend = 2'b10;
 						enbl_bus_size_change = 1;
+					end
+					emmc_sm_p::DO_STOP_WRITE_TRANSACT: begin
+						next_state = emmc_sm_p::DO_IDLE;
 					end
 					default: begin
 						next_state = emmc_sm_p::ERR;
@@ -357,18 +376,21 @@ module emmc_sm #(
 				state_change_enbl = start_i;
 			end
 			emmc_sm_p::DO_SBLK_WRITE: begin // **
-				`__SETUP_WAIT_FOR_CMD__(24, 0);
+				`__SETUP_WAIT_FOR_CMD__(24, rdwr_addr);
 			end
 			emmc_sm_p::DO_SBLK_READ: begin // **
-				`__SETUP_WAIT_FOR_CMD__(17, 0);
+				`__SETUP_WAIT_FOR_CMD__(17, rdwr_addr);
 			end
 			emmc_sm_p::DO_MBLK_WRITE: begin // **
-				`__SETUP_WAIT_FOR_CMD__(25, 0);
+				`__SETUP_WAIT_FOR_CMD__(25, rdwr_addr);
 			end
 			emmc_sm_p::DO_MBLK_READ: begin // **
-				`__SETUP_WAIT_FOR_CMD__(18, 0);
+				`__SETUP_WAIT_FOR_CMD__(18, rdwr_addr);
 			end
-			emmc_sm_p::DO_STOP_TRANSACT: begin
+			emmc_sm_p::DO_STOP_WRITE_TRANSACT: begin
+				`__SETUP_WAIT_FOR_CMD__(12, 0);
+			end
+			emmc_sm_p::DO_STOP_READ_TRANSACT: begin
 				`__SETUP_WAIT_FOR_CMD__(12, 0);
 			end
 			emmc_sm_p::DO_NOTHING: begin
