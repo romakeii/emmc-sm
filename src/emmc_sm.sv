@@ -205,6 +205,7 @@ module emmc_sm #(
 	always_ff @(posedge clk_i) if(curr_state == emmc_sm_p::DO_IDLE) rdwr_addr <= rdwr_addr_pend;
 
 	always_comb begin
+		mp_cntr_use(0);
 		wr_enbl_of_reg = '0;
 		next_state = emmc_sm_p::INIT_START;
 		state_change_enbl = '0;
