@@ -50,15 +50,21 @@ create_ip -vlnv {xilinx.com:ip:vio:3.0} -module vio -dir $ip_dir
 set_property -dict [list \
 	CONFIG.C_EN_PROBE_IN_ACTIVITY {0} \
 	CONFIG.C_NUM_PROBE_IN {0} \
+	CONFIG.C_NUM_PROBE_OUT {2} \
+	CONFIG.C_PROBE_OUT0_INIT_VAL {0} \
+	CONFIG.C_PROBE_OUT1_INIT_VAL {0} \
+	CONFIG.C_PROBE_OUT0_WIDTH {1} \
+	CONFIG.C_PROBE_OUT1_WIDTH {16}
 	] [get_ips vio]
 generate_target {instantiation_template} [get_files $ip_dir/vio/vio.xci]
 
 create_ip -vlnv {xilinx.com:ip:ila:6.2} -module ila -dir $ip_dir
 set_property -dict [list \
+	CONFIG.ALL_PROBE_SAME_MU_CNT {2} \
+	CONFIG.C_NUM_OF_PROBES {1} \
 	CONFIG.C_PROBE0_WIDTH {512} \
 	CONFIG.C_DATA_DEPTH {2048} \
 	CONFIG.C_PROBE0_MU_CNT {2} \
-	CONFIG.ALL_PROBE_SAME_MU_CNT {2} \
 	] [get_ips ila]
 generate_target {instantiation_template} [get_files $ip_dir/ila/ila.xci]
 
