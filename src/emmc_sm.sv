@@ -21,8 +21,6 @@ module emmc_sm #(
 	input logic clk_i,
 	input logic arst_i,
 
-	input logic emmc_rst_i,
-
 	input logic emmc_cmd_i,
 	output logic emmc_cmd_o,
 	output logic emmc_cmd_oe_o,
@@ -93,14 +91,8 @@ module emmc_sm #(
 
 	assign sd_clk = clk_i;
 
-	logic [7 : 0] serial_st;
-	logic [7 : 0] cmd_st;
-
 	logic dath_busy;
 	sd_cmd_host sd_cmd_host_inst (
-		.serial_st_o(serial_st),
-		.cmd_st_o(cmd_st),
-
 		.sys_rst(arst_i),
 		.sd_clk(sd_clk),
 		.start_i(cmdh_start),
@@ -156,7 +148,7 @@ module emmc_sm #(
 		.crc_ok_o(dath_crc_ok)
 	);
 
-	logic [$clog2(8192) : 0] mp_cntr;
+	logic [$clog2(4096) : 0] mp_cntr;
 	logic mp_cntr_rst;
 	logic mp_cntr_enbl;
 	always_ff @(posedge clk_i or posedge arst_i) begin
@@ -201,7 +193,7 @@ module emmc_sm #(
 
 	logic [31 : 0] rdwr_addr;
 	logic [$bits(rdwr_addr) - 1 : 0] rdwr_addr_pend;
-	assign rdwr_addr_pend = 512 << blk_idx_i;
+	assign rdwr_addr_pend = 512 * blk_idx_i;
 	always_ff @(posedge clk_i) if(curr_state == emmc_sm_p::DO_IDLE) rdwr_addr <= rdwr_addr_pend;
 
 	always_comb begin
@@ -275,7 +267,7 @@ module emmc_sm #(
 					emmc_sm_p::DO_MBLK_WRITE: begin
 						next_state = emmc_sm_p::WAIT_DAT;
 						orig_state_pend = orig_state;
-						wr_enbl_of_reg[CARD_STATUS] = 1;
+						wr_enbl_of_reg[CARD_STATUS] = state_change_enbl;
 					end
 					emmc_sm_p::DO_STOP_WRITE_TRANSACT: begin
 						next_state = emmc_sm_p::WAIT_BUSY;
@@ -383,10 +375,10 @@ module emmc_sm #(
 				`__SETUP_WAIT_FOR_CMD__(17, rdwr_addr);
 			end
 			emmc_sm_p::DO_MBLK_WRITE: begin // **
-				`__SETUP_WAIT_FOR_CMD__(25, rdwr_addr);
+				`__SETUP_WAIT_FOR_CMD__(25, 0);
 			end
 			emmc_sm_p::DO_MBLK_READ: begin // **
-				`__SETUP_WAIT_FOR_CMD__(18, rdwr_addr);
+				`__SETUP_WAIT_FOR_CMD__(18, 0);
 			end
 			emmc_sm_p::DO_STOP_WRITE_TRANSACT: begin
 				`__SETUP_WAIT_FOR_CMD__(12, 0);

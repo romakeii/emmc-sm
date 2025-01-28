@@ -51,6 +51,7 @@ module emmc_testcore #(
 
 	end
 
+	logic [15 : 0] blk_idx;
 	emmc_sm emmc_sm_inst (
 		.clk_i(clk_core),
 		.arst_i(rst_tk),
@@ -65,7 +66,8 @@ module emmc_testcore #(
 
 		.sel_clk_o(sel_clk),
 
-		.blk_cnt_i(1),
+		.blk_cnt_i(2),
+		.blk_idx_i(blk_idx),
 		.we_i(host_we),
 		.start_i(host_start),
 		.dat_i(host_wr_dat),
@@ -80,28 +82,32 @@ module emmc_testcore #(
 
 		if(~___SIMULATION___) begin
 
+			logic [511 : 0] ila_blob;
+			assign ila_blob = {
+				emmc_sm_inst.we_i,
+				emmc_sm_inst.start_i,
+				emmc_sm_inst.dat_i,
+				emmc_sm_inst.dat_o,
+				emmc_sm_inst.dvalid_o,
+				emmc_sm_inst.ready_o,
+				emmc_sm_inst.orig_state,
+				emmc_sm_inst.curr_state,
+				emmc_sm_inst.next_state,
+				emmc_sm_inst.state_change_enbl,
+				cmd_io,
+				dat_io,
+				emmc_sm_inst.card_status
+			};
 			ila ila_inst (
 				.clk(clk_core),
-				.probe0({
-					emmc_sm_inst.we_i,
-					emmc_sm_inst.start_i,
-					emmc_sm_inst.dat_i,
-					emmc_sm_inst.dat_o,
-					emmc_sm_inst.dvalid_o,
-					emmc_sm_inst.ready_o,
-					emmc_sm_inst.orig_state,
-					emmc_sm_inst.curr_state,
-					emmc_sm_inst.next_state,
-					cmd_io,
-					dat_io,
-					emmc_sm_inst.card_status
-				})
+				.probe0(ila_blob)
 			);
 
 			logic system_start;
 			vio vio_inst (
 				.clk(clk_i),
-				.probe_out0(system_start)
+				.probe_out0(system_start),
+				.probe_out1(blk_idx)
 			);
 			assign rst_tk = ~system_start;
 
