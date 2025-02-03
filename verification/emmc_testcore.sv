@@ -40,18 +40,13 @@ module emmc_testcore #(
 	logic host_ready;
 
 	assign host_start = 1;
-	always_ff @(posedge clk_core or posedge rst_tk) begin
-		if(rst_tk) begin
-			host_wr_dat <= 0;
-			host_we <= 1;
-		end else begin
-			if(host_dvalid) host_wr_dat <= host_wr_dat + 1;
-			if(host_ready)  host_we <= ~host_we;
-		end
 
-	end
-
+	localparam logic [1 : 0] BLK_CNT = 2;
 	logic [15 : 0] blk_idx;
+	always_ff @(posedge clk_core or posedge rst_tk) begin
+		if(rst_tk)          blk_idx <= 0;
+		else if(host_ready) blk_idx <= blk_idx + BLK_CNT;
+	end
 	emmc_sm emmc_sm_inst (
 		.clk_i(clk_core),
 		.arst_i(rst_tk),
@@ -66,7 +61,7 @@ module emmc_testcore #(
 
 		.sel_clk_o(sel_clk),
 
-		.blk_cnt_i(2),
+		.blk_cnt_i(BLK_CNT),
 		.blk_idx_i(blk_idx),
 		.we_i(host_we),
 		.start_i(host_start),
@@ -74,6 +69,24 @@ module emmc_testcore #(
 		.dat_o(host_rd_dat),
 		.dvalid_o(host_dvalid),
 		.ready_o(host_ready)
+	);
+
+	logic host_in_run_mode;
+	always_ff @(posedge clk_core or posedge rst_tk) begin
+		if(rst_tk)          host_in_run_mode <= 0;
+		else if(host_ready) host_in_run_mode <= 1;
+	end
+
+	logic chb_enbl;
+	assign chb_enbl = host_in_run_mode & host_dvalid;
+
+	ag_checkerboard #(.LENGTH(512 * BLK_CNT)) ag_checkerboard_inst (
+		.clk_i(clk_core),
+		.srst_i(rst_tk),
+		.enbl_i(chb_enbl),
+		.finished_o(),
+		.wr_data_o(host_wr_dat),
+		.wr_enbl_o(host_we)
 	);
 
 	assign clk_pad_o = clk_core;
@@ -106,8 +119,7 @@ module emmc_testcore #(
 			logic system_start;
 			vio vio_inst (
 				.clk(clk_i),
-				.probe_out0(system_start),
-				.probe_out1(blk_idx)
+				.probe_out0(system_start)
 			);
 			assign rst_tk = ~system_start;
 
