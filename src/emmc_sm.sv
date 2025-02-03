@@ -34,7 +34,7 @@ module emmc_sm #(
 	// Interface
 	input logic we_i,
 	input logic start_i,
-	input logic [15 : 0] blk_idx_i,
+	input logic [31 : 0] blk_idx_i,
 	input logic [jedec_p::BLK_CNT_WIDTH - 1 : 0] blk_cnt_i,
 	input logic [7 : 0] dat_i,
 	output logic [7 : 0] dat_o,
@@ -192,9 +192,7 @@ module emmc_sm #(
 	end
 
 	logic [31 : 0] rdwr_addr;
-	logic [$bits(rdwr_addr) - 1 : 0] rdwr_addr_pend;
-	assign rdwr_addr_pend = 512 * blk_idx_i;
-	always_ff @(posedge clk_i) if(curr_state == emmc_sm_p::DO_IDLE) rdwr_addr <= rdwr_addr_pend;
+	always_ff @(posedge clk_i) if(curr_state == emmc_sm_p::DO_IDLE) rdwr_addr <= blk_idx_i;
 
 	always_comb begin
 		mp_cntr_use(0);
