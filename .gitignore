@@ -19,6 +19,7 @@
 !auxiliary/*.tcl
 !verification/
 !verification/*.sv
+!verification/*.tcl
 !verification/hwdbg/
 !verification/hwdbg/*.sh
 !verification/hwdbg/*.tcl

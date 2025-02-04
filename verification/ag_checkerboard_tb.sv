@@ -1,12 +1,13 @@
 module ag_checkerboard_tb;
 
 	localparam WIDTH = 8;
-	localparam LENGTH = 16;
+	localparam LENGTH = 8;
 
 	logic clk_i;
 	logic srst_i;
 	logic enbl_i;
-	logic finished_o;
+	logic started_all_o;
+	logic started_part_o;
 	logic [WIDTH - 1 : 0] wr_data_o;
 	logic wr_enbl_o;
 
