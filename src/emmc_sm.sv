@@ -400,7 +400,10 @@ module emmc_sm #(
 
 	assign emmc_clk_o_pad = sd_clk;
 
-	assign dvalid_o = dath_tx_dat_rd | dath_rx_dat_we;
+	logic dath_tx_dat_rd_d1;
+	always_ff @(posedge clk_i) dath_tx_dat_rd_d1 <= dath_tx_dat_rd;
+
+	assign dvalid_o = dath_tx_dat_rd_d1 | dath_tx_dat_rd | dath_rx_dat_we;
 	assign ready_o = curr_state == emmc_sm_p::DO_IDLE;
 
 	always_ff @(posedge clk_i) begin
