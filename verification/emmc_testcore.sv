@@ -47,13 +47,15 @@ module emmc_testcore #(
 		else if(host_ready) host_in_run_mode <= 1;
 	end
 
-	localparam logic [1 : 0] BLK_CNT = 2;
+	localparam int unsigned BLK_CNT = 2;
+	(* DONT_TOUCH *) logic [jedec_p::BLK_CNT_WIDTH - 1 : 0] blk_cnt;
+	assign blk_cnt = BLK_CNT;
 	logic [31 : 0] blk_idx;
 	localparam logic [$bits(blk_idx) - 1 : 0] AMOUNT_OF_BLKS = 1562500;
 	logic chb_started_all;
 	always_ff @(posedge clk_core or posedge rst_tk) begin
 		if(rst_tk)                                           blk_idx <= 0;
-		else if(blk_idx < AMOUNT_OF_BLKS && chb_started_all && host_dvalid) blk_idx <= blk_idx + BLK_CNT;
+		else if(blk_idx < AMOUNT_OF_BLKS && chb_started_all && host_dvalid) blk_idx <= blk_idx + blk_cnt;
 	end
 	logic chb_enbl;
 	assign chb_enbl = host_in_run_mode & host_dvalid;
@@ -71,7 +73,7 @@ module emmc_testcore #(
 
 		.sel_clk_o(sel_clk),
 
-		.blk_cnt_i(BLK_CNT),
+		.blk_cnt_i(blk_cnt),
 		.blk_idx_i(blk_idx),
 		.we_i(host_we),
 		.start_i(host_start),
@@ -105,26 +107,29 @@ module emmc_testcore #(
 
 			logic [511 : 0] ila_blob;
 			assign ila_blob = {
-				emmc_sm_inst.we_i,
-				emmc_sm_inst.start_i,
-				emmc_sm_inst.dvalid_o,
-				emmc_sm_inst.ready_o,
 				emmc_sm_inst.orig_state,
 				emmc_sm_inst.curr_state,
 				emmc_sm_inst.next_state,
-				emmc_sm_inst.state_change_enbl,
-				emmc_sm_inst.fsm_dat_not_busy,
-				emmc_sm_inst.dath_crc_ok,
-				cmd_io,
-				dat_io,
-				host_wr_dat,
-				host_rd_dat,
-				is_err,
-				host_we,
-				ag_checkerboard_inst.work_counter,
-				ag_checkerboard_inst.part_counter,
-				blk_idx,
-				chb_started_all
+
+				emmc_sm_inst.emmc_cmd_i,
+				emmc_sm_inst.emmc_cmd_o,
+				emmc_sm_inst.emmc_cmd_oe_o,
+
+				emmc_sm_inst.emmc_dat_i,
+				emmc_sm_inst.emmc_dat_o,
+				emmc_sm_inst.emmc_dat_oe_o,
+
+				emmc_sm_inst.blk_cnt_i,
+				emmc_sm_inst.blk_idx_i,
+				emmc_sm_inst.we_i,
+				emmc_sm_inst.start_i,
+				emmc_sm_inst.dat_i,
+				emmc_sm_inst.dat_o,
+				emmc_sm_inst.dvalid_o,
+				emmc_sm_inst.ready_o,
+
+				is_err
+
 			};
 			ila ila_inst (
 				.clk(clk_core),
@@ -140,12 +145,6 @@ module emmc_testcore #(
 
 		end else begin
 			assign rst_tk = arst_i;
-
-			initial begin
-
-
-
-			end
 		end
 
 	endgenerate

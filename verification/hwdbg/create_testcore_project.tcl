@@ -5,10 +5,12 @@ source $script_dir/../../auxiliary/set_dirs.tcl
 
 cd $script_dir
 
-source "$auxiliary_dir/find_files.tcl"
-
 set proj_name "emmc_testcore"
 
+file delete -force "./.Xil/"
+file delete -force $proj_name
+
+source "$auxiliary_dir/find_files.tcl"
 set v_files   [list \
 	{*}[find_files $src_dir *.v] \
 	{*}[find_files $src_dir *.sv] \
@@ -45,16 +47,16 @@ if {[llength $v_files] != 0} {set_property -name "file_type" -value "SystemVeril
 
 set_property -name "top" -value "emmc_testcore" -objects [get_filesets sources_1]
 
+file delete -force $ip_dir
+
 file mkdir $ip_dir
 create_ip -vlnv {xilinx.com:ip:vio:3.0} -module vio -dir $ip_dir
 set_property -dict [list \
 	CONFIG.C_EN_PROBE_IN_ACTIVITY {0} \
 	CONFIG.C_NUM_PROBE_IN {0} \
-	CONFIG.C_NUM_PROBE_OUT {2} \
+	CONFIG.C_NUM_PROBE_OUT {1} \
 	CONFIG.C_PROBE_OUT0_INIT_VAL {0} \
-	CONFIG.C_PROBE_OUT1_INIT_VAL {0} \
-	CONFIG.C_PROBE_OUT0_WIDTH {1} \
-	CONFIG.C_PROBE_OUT1_WIDTH {16}
+	CONFIG.C_PROBE_OUT0_WIDTH {1}
 	] [get_ips vio]
 generate_target {instantiation_template} [get_files $ip_dir/vio/vio.xci]
 
